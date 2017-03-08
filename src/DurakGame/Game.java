@@ -28,8 +28,8 @@ public class Game {
         Game.trumpCard = trumpCard;
         Card.defineValuesWithTrump(Game.deck);
         for (Player player:
-             players) {
-            Card.defineValuesWithTrump(player.state.hand);
+             Game.players) {
+//            Card.defineValuesWithTrump(player.state.hand);
         }
     }
 
@@ -41,8 +41,6 @@ public class Game {
         //System.out.println("Trump card is "+trumpCard);//todo logger
         for (Player player: players
              ) {
-            player.state=new State();
-            System.out.println(player.state);
             player.state.hand.clear();
             player.state.hiddenCards.clear();
             player.state.cardsOnTable=cardsOnTable;
@@ -55,6 +53,8 @@ public class Game {
             player.state.hiddenCards.addAll(deck);
         }
         setTrumpCard(deck.get(0));
+        Card.defineValuesWithTrump(players[0].state.hand);
+        Card.defineValuesWithTrump(players[1].state.hand);
 
         //for 2 players only
         players[0].state.hiddenCards.addAll(players[1].state.hand);
@@ -103,12 +103,12 @@ public class Game {
             roundNumber++;
         }
         if (attacker.state.hand.size()==0) {
-            System.out.println(attacker.name+" wins!");
+            //System.out.println(attacker.name+" wins!");
             winnersTable.put(attacker.name,winnersTable.get(attacker.name)+1);
         }
         else if (roundNumber==999) throw new EndlessGameException();
         else    {
-            System.out.println(defender.name+ " wins!");
+            //System.out.println(defender.name+ " wins!");
             winnersTable.put(defender.name,winnersTable.get(defender.name)+1);
         }
     }

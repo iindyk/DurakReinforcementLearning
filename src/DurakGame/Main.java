@@ -7,6 +7,7 @@ import DurakGame.ReinforcementLearningPlayer.StateValueFunction;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static DurakGame.Game.getWinnersTable;
 
@@ -31,7 +32,8 @@ public class Main {
             //read
 
             player0.readValueFunctionsFromDB();
-            for (int i = 0; i <500 ; i++) {
+            Game.setWinnersTable(players);
+            for (int i = 0; i <1000 ; i++) {
                 Game game=new Game(players);
             }
             System.out.println(Game.getWinnersTable());

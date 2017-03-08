@@ -10,7 +10,8 @@ import java.util.ArrayList;
  */
 public abstract class Player {
     public String name;
-    public State state;
+    public State state=new State();
+
 
     public abstract ArrayList<Card> attack() throws Card.TrumpIsNotDefinedException;
 

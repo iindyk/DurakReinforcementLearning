@@ -17,9 +17,9 @@ import static DurakGame.Game.outOfTheGame;
 public class RandomAgentPlayer extends Player {
     private static int count;
     public RandomAgentPlayer(){
+        super();
         RandomAgentPlayer.count++;
         this.name="RandomAgent"+count;
-        this.state=new State();
     }
 
     @Override

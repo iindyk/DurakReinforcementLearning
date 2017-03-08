@@ -22,7 +22,6 @@ import static DurakGame.Conn.statmt;
  */
 public class RLPlayer extends Player {
     private static int count;
-    public State state=new State();
     public ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
     public ArrayList<StateValueFunction> valueFunctions=new ArrayList<>(State.NUMBER_OF_CLUSTERS);
 
@@ -34,7 +33,6 @@ public class RLPlayer extends Player {
         }
         this.name="RLPlayer"+count;
         count++;
-        this.state=new State();
     }
 
     @Override
