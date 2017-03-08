@@ -43,6 +43,7 @@ public class Main {
             Player player1=new RandomAgentPlayer();
             Player[] players=new Player[]{player0,player1};
             Game game=new Game(players);
+            Game game1=new Game(players);
             System.out.println(Game.getWinnersTable());
         }
         catch (Exception e){

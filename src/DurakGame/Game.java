@@ -35,14 +35,18 @@ public class Game {
         players=players;
         deck=Card.createDeck();
         setTrumpCard(deck.get(0));
-        System.out.println("Trump card is "+trumpCard);//todo logger
+        //System.out.println("Trump card is "+trumpCard);//todo logger
         for (Player player: players
              ) {
+            player.state.hand.clear();
+            player.state.hiddenCards.clear();
+            player.state.cardsOnTable=cardsOnTable;
+            player.state.outOfTheGame=outOfTheGame;
+            player.state.enemyKnownCards.clear();
+            player.state.enemyAttack.clear();
             for (int i = 0; i <6 ; i++) {
                 player.takeCardFromDeck();
             }
-            player.state.cardsOnTable=cardsOnTable;
-            player.state.outOfTheGame=outOfTheGame;
             player.state.hiddenCards.addAll(deck);
         }
 
@@ -66,12 +70,12 @@ public class Game {
             ArrayList<Card> defenceCards;
             while (attacker.canAttack()&&!(attackCards=attacker.attack()).isEmpty()) {
                 cardsOnTable.addAll(attackCards);
-                System.out.println("attacker is "+attacker.name+"\n"+attacker.state+"\n attack is "+attackCards);
+                //System.out.println("attacker is "+attacker.name+"\n"+attacker.state+"\n attack is "+attackCards);
                 if (defender.canDefend(attackCards)&&!(defenceCards =defender.defend(attackCards)).isEmpty()) {
                     cardsOnTable.addAll(defenceCards);
                     attacker.state.hiddenCards.removeAll(defenceCards);
                     attacker.state.enemyKnownCards.removeAll(defenceCards);
-                    System.out.println("defender is "+defender.name+"\n"+defender.state+"\n attack is "+ defenceCards);
+                    //System.out.println("defender is "+defender.name+"\n"+defender.state+"\n attack is "+ defenceCards);
                     if (!attacker.canAttack()) {
                         transitPlayer=attacker;
                         attacker=defender;
@@ -84,8 +88,8 @@ public class Game {
                 else {
                     defender.takeCards(cardsOnTable);
                     attacker.state.enemyKnownCards.addAll(cardsOnTable);
-                    System.out.println(defender.name + " takes cards "+cardsOnTable);
-                    System.out.println("defender state is "+defender.state);
+                    //System.out.println(defender.name + " takes cards "+cardsOnTable);
+                    //System.out.println("defender state is "+defender.state);
                     break;
                 }
             }

@@ -101,7 +101,7 @@ public class State {
                 "\n, enemyAttack=" + enemyAttack +
                 ", cardsOnTable=" + cardsOnTable+
                 ", roundNumber=" + roundNumber+
-                "\n, hiddenCards="+hiddenCards+
+                "\n, hiddenCards="+hiddenCards+"\nhidden cards number"+hiddenCards.size()+
                 '}';
     }
 
