@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="MyJavaTest:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/MyJavaTest_jar</output-path>
+    <root id="archive" name="MyJavaTest.jar">
+      <element id="module-output" name="DurakReinforcementLearning" />
+    </root>
+  </artifact>
+</component>
