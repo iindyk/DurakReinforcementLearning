@@ -14,7 +14,9 @@ public class ReadingSimulationPlayer extends Player {
     public ReadingSimulationPlayer(){
         this.name="ReadingSimulationPlayer"+count;
         count++;
+        this.state=new State();
     }
+
     @Override
     public ArrayList<Card> attack() {
         return null;

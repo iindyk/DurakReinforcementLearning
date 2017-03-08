@@ -56,7 +56,14 @@ public class State {
         }
     }
 
-    public State(){}
+    public State(){
+        this.hand=new ArrayList<>();
+        this.outOfTheGame=new ArrayList<>();
+        this.enemyKnownCards=new ArrayList<>();
+        this.hiddenCards=new HashSet<>();
+        this.cardsOnTable=new ArrayList<>();
+        this.enemyAttack=new ArrayList<>();
+    }
 
     public State(ArrayList<Card> hand, ArrayList<Card> outOfTheGame, ArrayList<Card> enemyKnownCards,ActionType actionType,
                  ArrayList<Card> enemyAttack,ArrayList<Card> cardsOnTable,int roundNumber) throws EmptyEnemyAttackException, UndefinedActionException{
@@ -101,8 +108,8 @@ public class State {
                 "\n, enemyAttack=" + enemyAttack +
                 ", cardsOnTable=" + cardsOnTable+
                 ", roundNumber=" + roundNumber+
-                "\n, hiddenCards="+hiddenCards+"\nhidden cards number"+hiddenCards.size()+
-                '}';
+                "\n, hiddenCards="+hiddenCards+"\nhidden cards number is "+hiddenCards.size()+
+                "}\n";
     }
 
     public static class EmptyEnemyAttackException extends Exception{}

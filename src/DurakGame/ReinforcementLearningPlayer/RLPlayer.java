@@ -22,7 +22,7 @@ import static DurakGame.Conn.statmt;
  */
 public class RLPlayer extends Player {
     private static int count;
-    public State state;
+    public State state=new State();
     public ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
     public ArrayList<StateValueFunction> valueFunctions=new ArrayList<>(State.NUMBER_OF_CLUSTERS);
 
@@ -101,7 +101,7 @@ public class RLPlayer extends Player {
         int sumVal =0;
         int i;
         for (Card card: currentState.hiddenCards) sumVal +=card.valueIntWithTrump;
-        Card avgHiddenCard=new Card(sumVal /currentState.hiddenCards.size());
+        Card avgHiddenCard=new Card(currentState.hiddenCards.isEmpty()? 0:sumVal /currentState.hiddenCards.size());
         if (sumVal !=0) {
             for (int j = 0; j <action.size() ; j++) nextHand.add(avgHiddenCard);
         }

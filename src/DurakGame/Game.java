@@ -27,6 +27,10 @@ public class Game {
     public static void setTrumpCard(Card trumpCard) {
         Game.trumpCard = trumpCard;
         Card.defineValuesWithTrump(Game.deck);
+        for (Player player:
+             players) {
+            Card.defineValuesWithTrump(player.state.hand);
+        }
     }
 
     private Game(){}
@@ -34,10 +38,11 @@ public class Game {
     public Game(Player[] players) throws Card.TrumpIsNotDefinedException, EndlessGameException {
         players=players;
         deck=Card.createDeck();
-        setTrumpCard(deck.get(0));
         //System.out.println("Trump card is "+trumpCard);//todo logger
         for (Player player: players
              ) {
+            player.state=new State();
+            System.out.println(player.state);
             player.state.hand.clear();
             player.state.hiddenCards.clear();
             player.state.cardsOnTable=cardsOnTable;
@@ -49,10 +54,9 @@ public class Game {
             }
             player.state.hiddenCards.addAll(deck);
         }
+        setTrumpCard(deck.get(0));
 
         //for 2 players only
-        winnersTable.put(players[0].name,0);
-        winnersTable.put(players[1].name,0);
         players[0].state.hiddenCards.addAll(players[1].state.hand);
         players[1].state.hiddenCards.addAll(players[0].state.hand);
         //defining attacker
@@ -116,6 +120,11 @@ public class Game {
             w+="\n"+entry.getKey()+": "+entry.getValue();
         }
         return w;
+    }
+
+    public static void setWinnersTable(Player[] players){
+        winnersTable.put(players[0].name,0);
+        winnersTable.put(players[1].name,0);
     }
 
     public class EndlessGameException extends Exception{}

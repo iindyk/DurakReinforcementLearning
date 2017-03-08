@@ -142,6 +142,14 @@ public class Card {
     }
 
     @Override
+    public int hashCode() {
+        int result = (int) value;
+        result = 31 * result + (int) suit;
+        return result;
+    }
+
+    @Override
+
     public boolean equals(Object o){
         Card card;
         if (!(o instanceof Card)) return false;
