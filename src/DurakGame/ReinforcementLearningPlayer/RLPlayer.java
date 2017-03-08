@@ -21,11 +21,11 @@ import static DurakGame.Conn.statmt;
  * Created by HP on 04.02.2017.
  */
 public class RLPlayer extends Player {
-    public State oldState;
+    private static int count;
     public State state;
-    public ArrayList<State> historyStates=new ArrayList<>();
-    public ArrayList<ArrayList<Card>> historyActions=new ArrayList<>(new ArrayList<>());
+    public ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
     public ArrayList<StateValueFunction> valueFunctions=new ArrayList<>(State.NUMBER_OF_CLUSTERS);
+
     public RLPlayer(){
         for (int i = 0; i <State.NUMBER_OF_CLUSTERS ; i++) {
             double[] coeff=new double[StateValueFunction.FEATURES_NUMBER];
@@ -36,17 +36,9 @@ public class RLPlayer extends Player {
         count++;
         this.state=new State();
     }
+
     @Override
-    public ArrayList<Card> attack(ArrayList<Card> cardsOnTable, char trumpSuit) {
-        //this.oldState=this.state;
-        this.state.cardsOnTable=new ArrayList(cardsOnTable);
-        this.state.actionType= State.ActionType.ATTACK;
-        this.state.hiddenCards.clear();
-        this.state.hiddenCards.addAll(Game.deck);
-        this.state.hiddenCards.removeAll(Game.players.get(1).state.hand);
-        this.state.hiddenCards.addAll(Game.players.get(1).state.hand);
-        this.state.hiddenCards.removeAll(cardsOnTable);
-        this.state.roundNumber=Game.roundNumber;
+    public ArrayList<Card> attack() throws Card.TrumpIsNotDefinedException {
         ArrayList<ArrayList<Card>> possibleActions=possibleActions(this.state);
         ArrayList<Card> attack=possibleActions.get(0);
         try {
@@ -64,21 +56,11 @@ public class RLPlayer extends Player {
             e.printStackTrace();
         }
         this.state.hand.removeAll(attack);
-        this.state.cardsOnTable.addAll(attack);
         return attack;
     }
 
     @Override
-    public ArrayList<Card> defend(ArrayList<Card> attackCards, char trumpSuit) {
-        //this.oldState=this.state;
-        this.state.cardsOnTable=new ArrayList<>(Game.cardsOnTable);
-        this.state.actionType= State.ActionType.DEFENCE;
-        this.state.hiddenCards.clear();
-        this.state.hiddenCards.addAll(Game.deck);
-        this.state.hiddenCards.removeAll(Game.players.get(1).state.hand);
-        this.state.hiddenCards.addAll(Game.players.get(1).state.hand);
-        this.state.hiddenCards.removeAll(Game.cardsOnTable);
-        this.state.roundNumber=Game.roundNumber;
+    public ArrayList<Card> defend(ArrayList<Card> attackCards) throws Card.TrumpIsNotDefinedException {
         ArrayList<ArrayList<Card>> possibleActions=possibleActions(this.state);
         ArrayList<Card> defence=possibleActions.get(0);
         try {
@@ -96,53 +78,7 @@ public class RLPlayer extends Player {
             e.printStackTrace();
         }
         this.state.hand.removeAll(defence);
-        this.state.cardsOnTable.addAll(defence);
         return defence;
-    }
-
-    @Override
-    public boolean canAttack(ArrayList<Card> cardsOnTable) {
-        /*//
-        System.out.println(this.state);
-        System.out.println("hidden number:"+this.state.hiddenCards.size());
-        //*/
-        this.state.hiddenCards.removeAll(cardsOnTable);
-        ArrayList<ArrayList<Card>> possibleAttacks= new ArrayList<>();
-        try {
-            State state=new State(this.state.hand,this.state.outOfTheGame,this.state.enemyKnownCards, State.ActionType.ATTACK,
-                    new ArrayList<>(),Game.cardsOnTable,Game.roundNumber);
-            possibleAttacks=possibleActions(state);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-        return !(possibleAttacks.size()==1 && possibleAttacks.get(0).isEmpty());
-    }
-
-    @Override
-    public boolean canDefend(ArrayList<Card> attack, char trumpSuit) {
-        this.state.hiddenCards.removeAll(attack);
-        ArrayList<ArrayList<Card>> possibleDefences= new ArrayList<>();
-        try {
-            State state=new State(this.state.hand,this.state.outOfTheGame,this.state.enemyKnownCards, State.ActionType.DEFENCE,
-                    attack,Game.cardsOnTable,Game.roundNumber);
-            this.state=state;
-            possibleDefences=possibleActions(state);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-        return !(possibleDefences.size()==1 && possibleDefences.get(0).isEmpty());
-    }
-
-    @Override
-    public void takeCard(Card card) {
-        this.state.hand.add(card);
-        this.state.hiddenCards.clear();
-        this.state.hiddenCards.addAll(Game.deck);
-        this.state.hiddenCards.removeAll(Game.players.get(1).state.hand);
-        this.state.hiddenCards.addAll(Game.players.get(1).state.hand);
-        this.state.hiddenCards.remove(card);
     }
 
     @Override
@@ -150,7 +86,7 @@ public class RLPlayer extends Player {
         return 0;
     }
 
-    public static State nextState(State currentState,ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException{
+    public static State nextState(State currentState,ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
         ArrayList<Card> nextHand=new ArrayList<>();
         nextHand.addAll(currentState.hand);
         nextHand.removeAll(action);
@@ -163,9 +99,9 @@ public class RLPlayer extends Player {
         //simplest prediction
         //getting average hidden card
         int sumVal =0;
-        int i=0;
-        for (; i <currentState.hiddenCards.size() ; i++) sumVal +=currentState.hiddenCards.get(i).valueIntWithTrump;
-        Card avgHiddenCard=new Card(sumVal /(i+1));
+        int i;
+        for (Card card: currentState.hiddenCards) sumVal +=card.valueIntWithTrump;
+        Card avgHiddenCard=new Card(sumVal /currentState.hiddenCards.size());
         if (sumVal !=0) {
             for (int j = 0; j <action.size() ; j++) nextHand.add(avgHiddenCard);
         }
@@ -210,7 +146,7 @@ public class RLPlayer extends Player {
         return newState;
     }
 
-    public static ArrayList<ArrayList<Card>> possibleActions(State currentState){
+    public static ArrayList<ArrayList<Card>> possibleActions(State currentState) throws Card.TrumpIsNotDefinedException {
         ArrayList<ArrayList<Card>> possibleActions=new ArrayList<>(new ArrayList<>());
         if (currentState.actionType== State.ActionType.ATTACK){
             ArrayList<Card> tmp=new ArrayList<>();
@@ -332,44 +268,37 @@ public class RLPlayer extends Player {
     }
 
     public void addToHistory(State state,ArrayList<Card> action, float reward){//reward?
-        this.historyStates.add(state);
-        this.historyActions.add(action);
+        this.historyStateActions.add(new State.StateAction(state,action));
     }
 
-    public void addToHistory(RLFileReader.StateAction stateAction){
-        this.addToHistory(stateAction.state,stateAction.action, 0);
+    public void addToHistory(State.StateAction stateAction){
+        this.historyStateActions.add(stateAction);
     }
 
-    public void addToHistory(ArrayList<RLFileReader.StateAction> stateActions){
-        for (RLFileReader.StateAction stateAction:
-             stateActions) {
-            addToHistory(stateAction);
-        }
+    public void addToHistory(ArrayList<State.StateAction> stateActions){
+        this.historyStateActions.addAll(stateActions);
     }
 
-    public void adjustValueFunctionsWithHistory() throws State.EmptyEnemyAttackException, State.UndefinedActionException{
+    public void adjustValueFunctionsWithHistory() throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
         valueFunctions.clear();
+        ArrayList<State.StateAction> stateActions=new ArrayList<>();
         for (int i = 0; i <State.NUMBER_OF_CLUSTERS ; i++) {
-            ArrayList<State> states=new ArrayList<>();
-            ArrayList<ArrayList<Card>> actions=new ArrayList<>(new ArrayList<>());
-            for (State historyState : historyStates) {
-                if (historyState.roundNumber == i) {
-                    states.add(historyState);
-                    actions.add(historyActions.get(i));
+            for (State.StateAction historyStateAction : historyStateActions) {
+                if (historyStateAction.state.roundNumber == i) {
+                    stateActions.add(historyStateAction);
                 }
             }
-            if (states.isEmpty()) return;
+            if (stateActions.isEmpty()) return;
             //LP
             double[] accumulatedCoef=new double[StateValueFunction.FEATURES_NUMBER];
-            for (State state: states) {
+            for (State.StateAction stateAction: stateActions) {
                 double[] lpCoef=new double[StateValueFunction.FEATURES_NUMBER];
-                ArrayList<Card> action=actions.get(states.indexOf(state));
-                State nextState=nextState(state,action);
+                State nextState=nextState(stateAction.state,stateAction.action);
                 ArrayList<ArrayList<Card>> possibleActions=possibleActions(state);
                 for (ArrayList<Card> possibleAction:
                      possibleActions) {
-                    if (!(action.containsAll(possibleAction)&&possibleAction.containsAll(action))){
-                        State nextPossibleState=nextState(state,possibleAction);
+                    if (!(stateAction.action.containsAll(possibleAction)&&possibleAction.containsAll(stateAction.action))){
+                        State nextPossibleState=nextState(stateAction.state,possibleAction);
                         for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++) {
                             lpCoef[j]+=(StateValueFunction.getBasisFunctionValue(j,nextPossibleState)-StateValueFunction.getBasisFunctionValue(j,nextState));
                         }
@@ -390,12 +319,12 @@ public class RLPlayer extends Player {
                 double[] solution = solver.solve(lp);
                 for (int j = 0; j < StateValueFunction.FEATURES_NUMBER; j++) accumulatedCoef[j]+=solution[j];
             }
-            for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++)accumulatedCoef[j]/=states.size();
+            for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++)accumulatedCoef[j]/=stateActions.size();
 
             this.valueFunctions.add( new StateValueFunction(accumulatedCoef));
+            stateActions.clear();
         }
-        this.historyStates.clear();
-        this.historyActions.clear();
+
     }
 
     public void writeValueFunctionsToDB(ArrayList<StateValueFunction> valueFunctions) throws SQLException, ClassNotFoundException {

@@ -16,6 +16,7 @@ public class Main {
     public static void main(String[] args){
         //value functions adjustment test
         try{
+            /*
             RLPlayer player1=new RLPlayer();
 
             SimpleAgentPlayer player2=new SimpleAgentPlayer();
@@ -23,7 +24,7 @@ public class Main {
             players.add(player1);
             players.add(player2);
             //write
-/*
+
             RLFileReader reader=new RLFileReader();
             player1.addToHistory(reader.readStateActionsFromTxd("D:\\coding\\java\\MyJavaTest\\games (2).txd"));
             State.makeClustering(player1.historyStates);
@@ -38,41 +39,14 @@ public class Main {
             }
             System.out.println(Game.count);
 */
+            Player player0=new RandomAgentPlayer();
+            Player player1=new RandomAgentPlayer();
+            Player[] players=new Player[]{player0,player1};
+            Game game=new Game(players);
+            System.out.println(Game.getWinnersTable());
         }
         catch (Exception e){
             e.printStackTrace();
         }
-
-        //SingleAgentPlayer Game test
-        //Game.trumpCard=new Card('6','d');
-        //Player player1=new RelationsNetPlayer();
-        /*Player player2=new RandomAgentPlayer();
-        ArrayList<Player> players=new ArrayList<>();
-        players.add(player1);
-        players.add(player2);
-        try{
-            for (int i = 0; i <1000 ; i++) {
-                Game game=new Game(players);
-            }
-            DurakGame.Conn.CloseDB();
-            System.out.println(Game.count);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }*/
-
-        //DB connection test
-        /*try{
-            Conn.Conn();
-            Conn.CloseDB();
-        }
-        catch (Exception e) {
-            System.out.println(e);
-        }*/
-
-
-
-
-
     }
 }

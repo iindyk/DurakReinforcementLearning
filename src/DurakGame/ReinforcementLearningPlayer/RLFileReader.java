@@ -15,32 +15,8 @@ import java.util.ArrayList;
  */
 public class RLFileReader  {
 
-    public class StateAction{
-        State state;
-        ArrayList<Card> action;
-        State nextState;
-        long gameID;
-
-        private StateAction(){}
-
-        @Override
-        public String toString() {
-            return "StateAction{" +
-                    "state=" + state +
-                    ", action=" + action +
-                    ", nextState=" + nextState +
-                    "}\n";
-        }
-
-        public StateAction(State state, ArrayList<Card> action,long gameID) {
-            this.state = state;
-            this.action = action;
-            this.gameID=gameID;
-        }
-    }
-
-    public ArrayList<StateAction> readStateActionsFromTxd(String path){
-        ArrayList<StateAction> stateActions=new ArrayList<>();
+    public ArrayList<State.StateAction> readStateActionsFromTxd(String path){
+        ArrayList<State.StateAction> stateActions=new ArrayList<>();
         int linesCount=0;
         long gameId=0;
         String prevLine="     ";
@@ -57,13 +33,11 @@ public class RLFileReader  {
         ArrayList<Card> enemyKnownCards1=new ArrayList<>();
         Card newCard;
         
-        ArrayList<StateAction> stateActions0=new ArrayList<>();
-        ArrayList<StateAction> stateActions1=new ArrayList<>();
+        ArrayList<State.StateAction> stateActions0=new ArrayList<>();
+        ArrayList<State.StateAction> stateActions1=new ArrayList<>();
         Player player0=new ReadingSimulationPlayer();
         Player player1=new ReadingSimulationPlayer();
-        ArrayList<Player> players=new ArrayList<>();
-        players.add(player0);
-        players.add(player1);
+        Player[] players=new Player[]{player0,player1};
         Game.players=players;
         player0.state.hand=hand0;
         player1.state.hand=hand1;
@@ -139,7 +113,7 @@ public class RLFileReader  {
                     //write attack & hand for 0 & change hand for 0 & set attack0=null
                     oldHandAttack.clear();
                     oldHandAttack.addAll(hand0);
-                    stateActions0.add(new StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame),
+                    stateActions0.add(new State.StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame),
                             new ArrayList(enemyKnownCards0), State.ActionType.ATTACK,
                             new ArrayList<>(),new ArrayList(cardsOnTable),roundNumber),new ArrayList(attack0),gameId));
                     hand0.removeAll(attack0);
@@ -151,7 +125,7 @@ public class RLFileReader  {
                     //write defence & hand for 1 & change hand for 1 & set defence1=null
                     oldHandDefence.clear();
                     oldHandDefence.addAll(hand1);
-                    stateActions1.add(new StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
+                    stateActions1.add(new State.StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
                             ,new ArrayList(enemyKnownCards1), State.ActionType.DEFENCE,
                             new ArrayList(stateActions0.get(stateActions0.size()-1).action),new ArrayList(cardsOnTable),roundNumber)
                             ,new ArrayList(defence1),gameId));
@@ -168,7 +142,7 @@ public class RLFileReader  {
                     //write attack & hand for 1 & change hand for 1 & set attack1=null
                     oldHandAttack.clear();
                     oldHandAttack.addAll(hand1);
-                    stateActions1.add(new StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
+                    stateActions1.add(new State.StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
                             ,new ArrayList(enemyKnownCards1), State.ActionType.ATTACK,
                             new ArrayList<>(),new ArrayList(cardsOnTable),roundNumber),new ArrayList(attack1),gameId));
                     hand1.removeAll(attack1);
@@ -180,7 +154,7 @@ public class RLFileReader  {
                     //write defence & hand for 0 & change hand for 0 & set attack0=null
                     oldHandDefence.clear();
                     oldHandDefence.addAll(hand0);
-                    stateActions0.add(new StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame)
+                    stateActions0.add(new State.StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame)
                             ,new ArrayList(enemyKnownCards0), State.ActionType.DEFENCE,
                             new ArrayList(stateActions1.get(stateActions1.size()-1).action),new ArrayList(cardsOnTable),roundNumber)
                             ,new ArrayList(defence0),gameId));
@@ -198,7 +172,7 @@ public class RLFileReader  {
                     else {//write attack & hand for 0 & change hand for 0 & set attack0=null & .add(line.substring(2,3))
                         oldHandAttack.clear();
                         oldHandAttack.addAll(hand0);
-                        stateActions0.add(new StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame)
+                        stateActions0.add(new State.StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame)
                                 ,new ArrayList(enemyKnownCards0), State.ActionType.ATTACK,
                                 new ArrayList<>(),new ArrayList(cardsOnTable),roundNumber),new ArrayList(attack0),gameId));
                         hand0.removeAll(attack0);
@@ -215,7 +189,7 @@ public class RLFileReader  {
                     else {//write attack & hand for 1 & change hand for 1 & set attack1=null & .add(line.substring(2,3))
                         oldHandAttack.clear();
                         oldHandAttack.addAll(hand1);
-                        stateActions1.add(new StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
+                        stateActions1.add(new State.StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
                                 ,new ArrayList(enemyKnownCards1), State.ActionType.ATTACK,
                                 new ArrayList<>(),new ArrayList(cardsOnTable),roundNumber),new ArrayList(attack1),gameId));
                         hand1.removeAll(attack1);
@@ -230,13 +204,13 @@ public class RLFileReader  {
                 }
                 else if (line.substring(2,4).equals("be")&& line.charAt(0)=='0') {
                     if (!defence0.isEmpty() && attack1.isEmpty()){
-                        stateActions0.add(new StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame)
+                        stateActions0.add(new State.StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame)
                                 ,new ArrayList(enemyKnownCards0), State.ActionType.DEFENCE,
                                 new ArrayList(stateActions1.get(stateActions1.size()-1).action),new ArrayList(cardsOnTable),roundNumber)
                                 ,new ArrayList(defence0),gameId));
                     }
                     else if(!attack1.isEmpty()){
-                        stateActions0.add(new StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame)
+                        stateActions0.add(new State.StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame)
                                 ,new ArrayList(enemyKnownCards0), State.ActionType.DEFENCE,
                                 new ArrayList(attack1),new ArrayList(cardsOnTable),roundNumber),new ArrayList(defence0),gameId));
                     }
@@ -248,13 +222,13 @@ public class RLFileReader  {
                 }
                 else if (line.substring(2,4).equals("be")&& line.charAt(0)=='1') {
                     if (!defence1.isEmpty() && attack0.isEmpty()){
-                        stateActions1.add(new StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
+                        stateActions1.add(new State.StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
                                 ,new ArrayList(enemyKnownCards1), State.ActionType.DEFENCE,
                                 new ArrayList(stateActions0.get(stateActions0.size()-1).action),new ArrayList(cardsOnTable),roundNumber)
                                 ,new ArrayList(defence1),gameId));
                     }
                     else if(!attack0.isEmpty()){
-                        stateActions1.add(new StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
+                        stateActions1.add(new State.StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
                                 ,new ArrayList(enemyKnownCards1), State.ActionType.DEFENCE,
                                 new ArrayList(attack0),new ArrayList(cardsOnTable),roundNumber),new ArrayList(defence1),gameId));
                     }
@@ -291,7 +265,7 @@ public class RLFileReader  {
                     else {
                         oldHandDefence.clear();
                         oldHandDefence.addAll(hand0);
-                        stateActions0.add(new StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame)
+                        stateActions0.add(new State.StateAction(new State(new ArrayList(hand0),new ArrayList(outOfTheGame)
                                 ,new ArrayList(enemyKnownCards0), State.ActionType.DEFENCE,
                                 new ArrayList(stateActions1.get(stateActions1.size()-1).action)
                                 ,new ArrayList(cardsOnTable),roundNumber),new ArrayList(defence0),gameId));
@@ -310,7 +284,7 @@ public class RLFileReader  {
                     else {
                         oldHandDefence.clear();
                         oldHandDefence.addAll(hand1);
-                        stateActions1.add(new StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
+                        stateActions1.add(new State.StateAction(new State(new ArrayList(hand1),new ArrayList(outOfTheGame)
                                 ,new ArrayList(enemyKnownCards1), State.ActionType.DEFENCE
                                 ,new ArrayList(stateActions0.get(stateActions0.size()-1).action),new ArrayList(cardsOnTable),roundNumber)
                                 ,new ArrayList(defence1),gameId));

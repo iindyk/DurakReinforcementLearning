@@ -12,12 +12,10 @@ public class StateValueFunction {
     public static final double DISCOUNT_FACTOR = 0.5;
     public static final double LEARNING_FACTOR = 0.1;
     public static final double RANDOM_FACTOR = 0.1;
-    //public static final int FEATURES_NUMBER=State.CARDS_IN_MEMORY;
     public static final int FEATURES_NUMBER = 2;
     public double[] coefficients = new double[FEATURES_NUMBER];
 
-    private StateValueFunction() {
-    }
+    private StateValueFunction() {}
 
     @Override
     public String toString() {
@@ -30,7 +28,7 @@ public class StateValueFunction {
         this.coefficients = coefficients;
     }
 
-    public double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException {
+    public double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
         State newState = RLPlayer.nextState(currentState, action);
         double result = 0;
         for (int i = 0; i < FEATURES_NUMBER; i++) {
@@ -39,7 +37,7 @@ public class StateValueFunction {
         return result;
     }
 
-    public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException {
+    public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
         double result = 0;
         for (int i = 0; i < actionSequence.size(); i++)
             result += getRvalue(stateSequence.get(i), actionSequence.get(i)) * Math.pow(DISCOUNT_FACTOR, i);

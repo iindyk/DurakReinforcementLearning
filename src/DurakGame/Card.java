@@ -18,10 +18,11 @@ import static java.lang.StrictMath.abs;
  */
 public class Card {
     public char value;
-    public char suit;
-    public int valueInt;
+    char suit;
+    int valueInt;
     public int valueIntWithTrump;
     private Card(){}
+
     public Card(char value, char suit){
         this.value=value;
         this.suit=suit;
@@ -47,8 +48,8 @@ public class Card {
                     break;
             }
         }
-        this.valueIntWithTrump=this.valueInt;
     }
+
     public Card(String cardString) {
         this.value=cardString.charAt(1);
         this.suit=cardString.charAt(0);
@@ -75,8 +76,8 @@ public class Card {
             }
         }
         if (Game.getTrumpCard() != null && Game.getTrumpCard().suit==this.suit) this.valueIntWithTrump=this.valueInt+9;
-        else this.valueIntWithTrump=this.valueInt;
     }
+
     public Card(int valueIntWithTrump){
         this.valueIntWithTrump=valueIntWithTrump;
         if (valueIntWithTrump>14) {
@@ -93,6 +94,7 @@ public class Card {
         else if (this.valueInt==13) this.value='k';
         else this.value='a';
     }
+
     public static void defineValuesWithTrump(ArrayList<Card> deck){
         for (Card card:
              deck) {
@@ -100,12 +102,15 @@ public class Card {
             else card.valueIntWithTrump=card.valueInt;
         }
     }
+
     public boolean beats(Card card2,char trumpSuit){
         if ((this.suit==card2.suit)&&(this.valueInt>card2.valueInt)) return true;
         else if ((this.suit!=card2.suit)&&(this.suit==trumpSuit)) return true;
         else return false;
     }
-    public boolean beats(Card card){
+
+    public boolean beats(Card card) throws TrumpIsNotDefinedException {
+        if (Game.getTrumpCard()==null) throw new TrumpIsNotDefinedException();
         return beats(card, Game.getTrumpCard().suit);
     }
 
@@ -130,18 +135,12 @@ public class Card {
         }
         return result;
     }
-    public static Card nextCard(ArrayList<Card> deck){
-        Card result =deck.get(deck.size()-1);
-        deck.remove(deck.size()-1);
-        return result;
-    }
-    public static Card nextCard(){
-        return nextCard(Game.deck);
-    }
+
     @Override
     public String toString(){
         return this.value+" "+this.suit;
     }
+
     @Override
     public boolean equals(Object o){
         Card card;
@@ -150,6 +149,7 @@ public class Card {
         if (this.value==card.value && this.suit==card.suit) return true;
         else return false;
     }
+
     public static ArrayList<Card> makeCardsList(ArrayList<String> stringList) {
         ArrayList<Card> result=new ArrayList<>();
         for (String strCard:
@@ -168,32 +168,7 @@ public class Card {
         }
         return result;
     }
-    public static float getAverageValueInGame(ArrayList<Card> outOfTheGame,char trumpSuit){
-        int r=0;
-        ArrayList<Card> deck=createDeck();
-        deck.removeAll(outOfTheGame);
-        for (Card card:
-             deck) {
-            for (Card card1:
-                 deck) {
-                if (card1.beats(card,trumpSuit)) r++;
-            }
-        }
-        return (float)r/deck.size();
-    }
-    public static float getAverageValueInHand(ArrayList<Card> hand, ArrayList<Card> outOfTheGame, char trumpSuit){
-        int r=0;
-        ArrayList<Card> deck=createDeck();
-        deck.removeAll(outOfTheGame);
-        for (Card card:
-             hand) {
-            for (Card card1:
-                 deck) {
-                if (card1.beats(card,trumpSuit)) r++;
-            }
-        }
-        return (float)r/hand.size();
-    }
+
     public int distTo(Card card){
         if (card==null) return card.valueIntWithTrump;
         int r;
@@ -201,6 +176,7 @@ public class Card {
         else r=abs(this.valueIntWithTrump-card.valueIntWithTrump)+5;//todo why 5?
         return r;
     }
+
     public static int distTo(ArrayList<Card> cardList1, ArrayList<Card> cardList2){
         int result=0;
         ArrayList<Card> ordcl1=getSorted(cardList1);
@@ -220,6 +196,7 @@ public class Card {
         }
         return result;
     }
+
     public static ArrayList<Card> getSorted(ArrayList<Card> cards){
         ArrayList<Card> result=new ArrayList<>(cards.size());
         result.addAll(cards);
@@ -249,5 +226,6 @@ public class Card {
         
         return result;
     }
-    //public class TrumpIsNotDefinedException extends Exception{}
+
+    public class TrumpIsNotDefinedException extends Exception{}
 }

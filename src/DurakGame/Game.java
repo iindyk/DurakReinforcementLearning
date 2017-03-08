@@ -1,17 +1,24 @@
 package DurakGame;
 
-import java.sql.SQLException;
+import DurakGame.ReinforcementLearningPlayer.State;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * Created by igor on 03.10.16.
  */
 public class Game {
-    public static int count;
     private static Card trumpCard;
-    public static ArrayList<Player> players=new ArrayList<>();
+    public static Player[] players=new Player[2];
     public static ArrayList<Card> deck=new ArrayList<>();
     public static int roundNumber;
+    public static ArrayList<Card> cardsOnTable=new ArrayList<>();
+    public static ArrayList<Card> outOfTheGame=new ArrayList<>();
+
+    public static HashMap<String,Integer> winnersTable=new HashMap<>();
 
     public static Card getTrumpCard() {
         return trumpCard;
@@ -19,94 +26,93 @@ public class Game {
 
     public static void setTrumpCard(Card trumpCard) {
         Game.trumpCard = trumpCard;
-        /*for (Card card:
-             Card.cards) {
-            if (card.suit==trumpCard.suit) card.valueIntWithTrump=card.valueInt+9;
-        }*/
+        Card.defineValuesWithTrump(Game.deck);
     }
 
-    public static void updateStates(){
-        //player0:
-        players.get(0).state.outOfTheGame=outOfTheGame;
-        players.get(0).state.hiddenCards.clear();
-        players.get(0).state.hiddenCards.addAll(players.get(1).state.hand);
-        players.get(0).state.hiddenCards.addAll(deck);
+    private Game(){}
 
-        //player1:
-
-    }
-
-    public static ArrayList<Card> cardsOnTable=new ArrayList<>();
-    public static ArrayList<Card> outOfTheGame=new ArrayList<>();//todo use it
-    private Game(){
-    }
-    public Game(ArrayList<Player> players) {
-        this.players=players;
-        this.deck=Card.createDeck();
-        this.trumpCard=deck.get(0);
-        Card.defineValuesWithTrump(this.deck);
-        //System.out.println("Trump card is "+this.trumpCard);
+    public Game(Player[] players) throws Card.TrumpIsNotDefinedException, EndlessGameException {
+        players=players;
+        deck=Card.createDeck();
+        setTrumpCard(deck.get(0));
+        System.out.println("Trump card is "+trumpCard);//todo logger
         for (Player player: players
              ) {
-            //System.out.print(player.name + "'s state.hand is ");
             for (int i = 0; i <6 ; i++) {
-                Card card=Card.nextCard(this.deck);
-                player.takeCard(card);
-                //System.out.print(card+"  ");
+                player.takeCardFromDeck();
             }
-            //System.out.println();
+            player.state.cardsOnTable=cardsOnTable;
+            player.state.outOfTheGame=outOfTheGame;
+            player.state.hiddenCards.addAll(deck);
         }
 
         //for 2 players only
-        Player attacker=players.get(0);
-        Player defender=players.get(1);
+        winnersTable.put(players[0].name,0);
+        winnersTable.put(players[1].name,0);
+        players[0].state.hiddenCards.addAll(players[1].state.hand);
+        players[1].state.hiddenCards.addAll(players[0].state.hand);
+        //defining attacker
+        Random random=new Random();
+        int attackedID=random.nextInt(2);
+        Player attacker=players[attackedID];
+        attacker.state.actionType= State.ActionType.ATTACK;
+        Player defender=players[1-attackedID];
+        defender.state.actionType= State.ActionType.DEFENCE;
         Player transitPlayer;
         roundNumber=0;
         while (attacker.state.hand.size()!=0 && defender.state.hand.size()!=0 && roundNumber<1000) {
-            /*
-            System.out.print(attacker.name + "'s state.hand is ");
-            for(Card card: attacker.state.hand) System.out.print(card+"  ");
-            System.out.println();
-            System.out.print(defender.name + "'s state.hand is ");
-            for(Card card: defender.state.hand) System.out.print(card+"  ");
-            System.out.println();
-            */
+            for (Player player: players) player.state.roundNumber=roundNumber;
             ArrayList<Card> attackCards;
-            ArrayList<Card> defendCards;
-            //System.out.println("Round " +roundNumber);
-            while (attacker.canAttack(this.cardsOnTable)&&!(attackCards=attacker.attack(this.cardsOnTable,this.trumpCard.suit)).isEmpty()) {
-                this.cardsOnTable.addAll(attackCards);
-                //System.out.println(attacker.name + " attacks with " + attackCards);//
-                if (defender.canDefend(attackCards,this.trumpCard.suit)&&!(defendCards=defender.defend(attackCards,this.trumpCard.suit)).isEmpty()) {
-                    this.cardsOnTable.addAll(defendCards);
-                    //System.out.println(defender.name +" defends with "+ defendCards);//
-                    if (!attacker.canAttack(this.cardsOnTable)) {
+            ArrayList<Card> defenceCards;
+            while (attacker.canAttack()&&!(attackCards=attacker.attack()).isEmpty()) {
+                cardsOnTable.addAll(attackCards);
+                System.out.println("attacker is "+attacker.name+"\n"+attacker.state+"\n attack is "+attackCards);
+                if (defender.canDefend(attackCards)&&!(defenceCards =defender.defend(attackCards)).isEmpty()) {
+                    cardsOnTable.addAll(defenceCards);
+                    attacker.state.hiddenCards.removeAll(defenceCards);
+                    attacker.state.enemyKnownCards.removeAll(defenceCards);
+                    System.out.println("defender is "+defender.name+"\n"+defender.state+"\n attack is "+ defenceCards);
+                    if (!attacker.canAttack()) {
                         transitPlayer=attacker;
                         attacker=defender;
                         defender=transitPlayer;
+                        attacker.state.actionType= State.ActionType.ATTACK;
+                        defender.state.actionType= State.ActionType.DEFENCE;
                         break;
                     }
                 }
                 else {
-                    for (Card card: this.cardsOnTable) defender.takeCard(card);
-                    //System.out.println(defender.name + " takes cards");
+                    defender.takeCards(cardsOnTable);
+                    attacker.state.enemyKnownCards.addAll(cardsOnTable);
+                    System.out.println(defender.name + " takes cards "+cardsOnTable);
+                    System.out.println("defender state is "+defender.state);
                     break;
                 }
             }
-            this.cardsOnTable.clear();
-            while (attacker.state.hand.size()<6&&deck.size()!=0) {
-                attacker.takeCard(Card.nextCard(this.deck));
-
-            }
-            while (defender.state.hand.size()<6&&deck.size()!=0) {
-                defender.takeCard(Card.nextCard(this.deck));
-            }
+            cardsOnTable.clear();
+            while (attacker.state.hand.size()<6&&deck.size()!=0) attacker.takeCardFromDeck();
+            while (defender.state.hand.size()<6&&deck.size()!=0) defender.takeCardFromDeck();
             roundNumber++;
         }
-        if (attacker.state.hand.size()==0) System.out.println(attacker.name+" wins!");
-        else if (roundNumber==999) System.out.println("Timeout!");
-        else    System.out.println(defender.name+ " wins!");
-        if (attacker.name.charAt(0)=='R' && attacker.state.hand.size()==0) Game.count++;
-        if (defender.name.charAt(0)=='R' && defender.state.hand.size()==0) Game.count++;
+        if (attacker.state.hand.size()==0) {
+            System.out.println(attacker.name+" wins!");
+            winnersTable.put(attacker.name,winnersTable.get(attacker.name)+1);
+        }
+        else if (roundNumber==999) throw new EndlessGameException();
+        else    {
+            System.out.println(defender.name+ " wins!");
+            winnersTable.put(defender.name,winnersTable.get(defender.name)+1);
+        }
     }
+
+    public static String getWinnersTable(){
+        String w="Statistics of wins:";
+        for (Map.Entry<String, Integer> entry:
+             winnersTable.entrySet()) {
+            w+="\n"+entry.getKey()+": "+entry.getValue();
+        }
+        return w;
+    }
+
+    public class EndlessGameException extends Exception{}
 }

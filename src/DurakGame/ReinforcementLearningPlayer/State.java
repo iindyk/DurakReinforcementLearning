@@ -4,6 +4,7 @@ import DurakGame.Card;
 import DurakGame.Game;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
 
 /**
@@ -13,20 +14,46 @@ public class State {
     public ArrayList<Card> hand=new ArrayList<>();
     public ArrayList<Card> outOfTheGame=new ArrayList<>();
     public ArrayList<Card> enemyKnownCards=new ArrayList<>();
-    public ArrayList<Card> hiddenCards=new ArrayList<>();
-    int roundNumber;
-
+    public HashSet<Card> hiddenCards=new HashSet<>();
     public ArrayList<Card> cardsOnTable=new ArrayList<>();
     public ArrayList<Card> enemyAttack=new ArrayList<>();
     public ActionType actionType;
-
-    public static ArrayList<State> states=new ArrayList<>();
+    public int roundNumber;
 
     public static final int NUMBER_OF_CLUSTERS=50;
 
     public enum ActionType{
         ATTACK,
         DEFENCE
+    }
+
+    public static class StateAction{
+        State state;
+        ArrayList<Card> action;
+        State nextState; //todo think how to use it
+        long gameID; //is not used now
+
+        private StateAction(){}
+
+        @Override
+        public String toString() {
+            return "StateAction{" +
+                    "state=" + state +
+                    ", action=" + action +
+                    ", nextState=" + nextState +
+                    "}\n";
+        }
+
+        public StateAction(State state, ArrayList<Card> action) {
+            this.state = state;
+            this.action = action;
+        }
+
+        public StateAction(State state, ArrayList<Card> action, long gameID) {
+            this.state = state;
+            this.action = action;
+            this.gameID=gameID;
+        }
     }
 
     public State(){}
@@ -39,21 +66,20 @@ public class State {
         this.roundNumber=roundNumber;
         this.cardsOnTable = cardsOnTable;
         this.actionType=actionType;
-        this.hand = Card.getSorted(hand);
-        this.outOfTheGame = Card.getSorted(outOfTheGame);
-        this.enemyKnownCards = Card.getSorted(enemyKnownCards);
+        this.hand = hand;
+        this.outOfTheGame = outOfTheGame;
+        this.enemyKnownCards = enemyKnownCards;
+    }
 
-        this.hiddenCards.clear();
-        this.hiddenCards.addAll(Game.deck);
-        this.hiddenCards.addAll(Game.players.get(1).state.hand);
-        ArrayList<Card> hiddenCardsCopy=Card.getSorted(this.hiddenCards);
-        for (int i = 0; i <hiddenCardsCopy.size()-1 ; i++) {
-            for (int j = i+1; j <hiddenCardsCopy.size() ; j++) {
-                if (hiddenCardsCopy.get(i).equals(hiddenCardsCopy.get(j))) hiddenCardsCopy.remove(j);
-            }
-        }
-        this.hiddenCards=hiddenCardsCopy;
-        states.add(this);
+    public State(State state){
+        this.actionType=state.actionType;
+        this.enemyAttack=new ArrayList<>(state.enemyAttack);
+        this.roundNumber=state.roundNumber;
+        this.cardsOnTable=new ArrayList<>(state.cardsOnTable);
+        this.hiddenCards=new HashSet<>(state.hiddenCards);
+        this.enemyKnownCards=new ArrayList<>(state.enemyKnownCards);
+        this.outOfTheGame=new ArrayList<>(state.outOfTheGame);
+        this.hand=new ArrayList<>(state.hand);
     }
 
     public int distTo(State state){

@@ -9,28 +9,34 @@ import java.util.ArrayList;
  * Created by HP on 05.03.2017.
  */
 public class ReadingSimulationPlayer extends Player {
+    private static int count;
+
+    public ReadingSimulationPlayer(){
+        this.name="ReadingSimulationPlayer"+count;
+        count++;
+    }
     @Override
-    public ArrayList<Card> attack(ArrayList<Card> cardsOnTable, char trumpSuit) {
+    public ArrayList<Card> attack() {
         return null;
     }
 
     @Override
-    public ArrayList<Card> defend(ArrayList<Card> attackCards, char trumpSuit) {
+    public ArrayList<Card> defend(ArrayList<Card> attackCards) {
         return null;
     }
 
     @Override
-    public boolean canAttack(ArrayList<Card> cardsOnTable) {
+    public boolean canAttack() {
         return false;
     }
 
     @Override
-    public boolean canDefend(ArrayList<Card> attack, char trumpSuit) {
+    public boolean canDefend(ArrayList<Card> attack) {
         return false;
     }
 
     @Override
-    public void takeCard(Card card) {
+    public void takeCardFromDeck() {
 
     }
 

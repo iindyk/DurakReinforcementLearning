@@ -1,8 +1,13 @@
 package DurakGame;
 
-import java.sql.SQLException;
+
+import DurakGame.ReinforcementLearningPlayer.State;
+
 import java.util.ArrayList;
 import java.util.Random;
+
+import static DurakGame.Game.deck;
+import static DurakGame.Game.outOfTheGame;
 
 /**
  * Created by igor.indyk on 11/17/2016.
@@ -10,20 +15,23 @@ import java.util.Random;
 
 //always makes random of possible attacks and defences
 public class RandomAgentPlayer extends Player {
+    private static int count;
     public RandomAgentPlayer(){
         RandomAgentPlayer.count++;
         this.name="RandomAgent"+count;
+        this.state=new State();
     }
+
     @Override
-    public ArrayList<Card> attack(ArrayList<Card> cardsOnTable, char trumpSuit) {
+    public ArrayList<Card> attack() {
         ArrayList<Card> retainedHand=new ArrayList<>();
         retainedHand.addAll(this.state.hand);
         int in=0;
-        if (!(cardsOnTable.size()==0)) {
+        if (!(Game.cardsOnTable.size()==0)) {
             for (Card cardOnHand :
                     this.state.hand) {
                 for (Card cardOnTable :
-                        cardsOnTable) {
+                        Game.cardsOnTable) {
                     if (cardOnHand.value == cardOnTable.value) in = 1;
                 }
                 if (in == 0) retainedHand.remove(cardOnHand);
@@ -42,11 +50,12 @@ public class RandomAgentPlayer extends Player {
                 if (att.value==card.value&&att.suit==card.suit) this.state.hand.remove(card);
             }
         }
+        this.state.hand.removeAll(result);
         return result;
     }
 
     @Override
-    public ArrayList<Card> defend(ArrayList<Card> attack, char trump) {
+    public ArrayList<Card> defend(ArrayList<Card> attack) throws Card.TrumpIsNotDefinedException {
         ArrayList<ArrayList<Card>> possibleDefences = new ArrayList<>();
         ArrayList<Card> availableHand0=new ArrayList<>();
         ArrayList<Card> availableHand1=new ArrayList<>();
@@ -57,7 +66,7 @@ public class RandomAgentPlayer extends Player {
             tmp.clear();
             availableHand0.clear();
             availableHand0.addAll(state.hand);
-            if (state.hand.get(i).beats(attack.get(0),trump)) {
+            if (state.hand.get(i).beats(attack.get(0))) {
                 tmp.add(state.hand.get(i));
                 availableHand0.remove(state.hand.get(i));
                 if (attack.size() > 1) {
@@ -65,7 +74,7 @@ public class RandomAgentPlayer extends Player {
                     availableHand1.addAll(availableHand0);
                     for (Card card :
                             availableHand0) {
-                        if (card.beats(attack.get(1), trump)) {
+                        if (card.beats(attack.get(1))) {
                             availableHand1.remove(card);
                             tmp.add(card);
                             if (attack.size() > 2) {
@@ -73,13 +82,13 @@ public class RandomAgentPlayer extends Player {
                                 availableHand2.addAll(availableHand1);
                                 for (Card card1 :
                                         availableHand1) {
-                                    if (card1.beats(attack.get(2), trump)) {
+                                    if (card1.beats(attack.get(2))) {
                                         availableHand2.remove(card1);
                                         tmp.add(card1);
                                         if (attack.size() > 3) {
                                             for (Card card2 :
                                                     availableHand2) {
-                                                if (card2.beats(attack.get(3), trump)) {
+                                                if (card2.beats(attack.get(3))) {
                                                     tmp.add(card2);
                                                     possibleDefences.add(tmp);
                                                     tmp.clear();
@@ -123,95 +132,6 @@ public class RandomAgentPlayer extends Player {
             }
         }
         return bestDefence;
-    }
-
-    @Override
-    public boolean canAttack(ArrayList<Card> cardsOnTable) {
-        if (cardsOnTable.size()==0) return true;
-        else {
-            for (Card cardTable: cardsOnTable
-                    ) {
-                for (Card cardHand: this.state.hand
-                        ) {
-                    if (cardHand.value==cardTable.value) return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public boolean canDefend(ArrayList<Card> attack, char trump) {
-        ArrayList<ArrayList<Card>> possibleDefences = new ArrayList<>();
-        ArrayList<Card> availableHand0=new ArrayList<>();
-        ArrayList<Card> availableHand1=new ArrayList<>();
-        ArrayList<Card> availableHand2=new ArrayList<>();
-        ArrayList<Card> tmp=new ArrayList<>();
-        //defining possible defences list
-        for (int i = 0; i <this.state.hand.size() ; i++) {
-            tmp.clear();
-            availableHand0.clear();
-            availableHand0.addAll(state.hand);
-            if (state.hand.get(i).beats(attack.get(0),trump)) {
-                tmp.add(state.hand.get(i));
-                availableHand0.remove(state.hand.get(i));
-                if (attack.size() > 1) {
-                    availableHand1.clear();
-                    availableHand1.addAll(availableHand0);
-                    for (Card card :
-                            availableHand0) {
-                        if (card.beats(attack.get(1), trump)) {
-                            availableHand1.remove(card);
-                            tmp.add(card);
-                            if (attack.size() > 2) {
-                                availableHand2.clear();
-                                availableHand2.addAll(availableHand1);
-                                for (Card card1 :
-                                        availableHand1) {
-                                    if (card1.beats(attack.get(2), trump)) {
-                                        availableHand2.remove(card1);
-                                        tmp.add(card1);
-                                        if (attack.size() > 3) {
-                                            for (Card card2 :
-                                                    availableHand2) {
-                                                if (card2.beats(attack.get(3), trump)) {
-                                                    tmp.add(card2);
-                                                    possibleDefences.add(new ArrayList(tmp));
-                                                    tmp.clear();
-                                                }
-                                            }
-                                        }
-                                        else {
-                                            possibleDefences.add(new ArrayList(tmp));
-                                            tmp.remove(2);
-                                        }
-                                    }
-                                }
-                            }
-                            else {
-                                possibleDefences.add(new ArrayList(tmp));
-                                tmp.remove(1);
-                            }
-
-                        }
-                    }
-
-                }
-                else {
-                    possibleDefences.add(new ArrayList(tmp));
-                    tmp.remove(0);
-                }
-
-
-            }
-
-        }
-        return !(possibleDefences.size()==0);
-    }
-
-    @Override
-    public void takeCard(Card card) {
-        this.state.hand.add(card);
     }
 
     @Override
