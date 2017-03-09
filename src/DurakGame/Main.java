@@ -25,9 +25,9 @@ public class Main {
             //write
 /*
             RLFileReader reader=new RLFileReader();
-            player1.addToHistory(reader.readStateActionsFromTxd("D:\\coding\\java\\DurakReinforcementLearning\\games.txd"));
-            player1.adjustValueFunctionsWithHistory();
-            player1.writeValueFunctionsToDB(player1.valueFunctions);
+            player0.addToHistory(reader.readStateActionsFromTxd("D:\\coding\\java\\DurakReinforcementLearning\\games.txd"));
+            player0.adjustValueFunctionsWithHistory();
+            player0.writeValueFunctionsToDB(player0.valueFunctions);
 */
             //read
 

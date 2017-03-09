@@ -149,7 +149,6 @@ public class Card {
     }
 
     @Override
-
     public boolean equals(Object o){
         Card card;
         if (!(o instanceof Card)) return false;
