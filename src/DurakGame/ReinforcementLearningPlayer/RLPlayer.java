@@ -22,8 +22,8 @@ import static DurakGame.Conn.statmt;
  */
 public class RLPlayer extends Player {
     private static int count;
-    public ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
-    public ArrayList<StateValueFunction> valueFunctions=new ArrayList<>(State.NUMBER_OF_CLUSTERS);
+    private ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
+    private ArrayList<StateValueFunction> valueFunctions=new ArrayList<>(State.NUMBER_OF_CLUSTERS);
 
     public RLPlayer(){
         for (int i = 0; i <State.NUMBER_OF_CLUSTERS ; i++) {
@@ -84,7 +84,7 @@ public class RLPlayer extends Player {
         return 0;
     }
 
-    public static State nextState(State currentState,ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
+    static State nextState(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
         ArrayList<Card> nextHand=new ArrayList<>();
         nextHand.addAll(currentState.hand);
         nextHand.removeAll(action);
@@ -139,12 +139,11 @@ public class RLPlayer extends Player {
                 nextActionType= State.ActionType.ATTACK;
             }
         }
-        State newState=new State(nextHand,nextOutOfTheGame,nextEnemyKnownCards,nextActionType,nexEnemyAttack, null,
+        return new State(nextHand,nextOutOfTheGame,nextEnemyKnownCards,nextActionType,nexEnemyAttack, null,
                 currentState.roundNumber+1);
-        return newState;
     }
 
-    public static ArrayList<ArrayList<Card>> possibleActions(State currentState) throws Card.TrumpIsNotDefinedException {
+    private static ArrayList<ArrayList<Card>> possibleActions(State currentState) throws Card.TrumpIsNotDefinedException {
         ArrayList<ArrayList<Card>> possibleActions=new ArrayList<>(new ArrayList<>());
         if (currentState.actionType== State.ActionType.ATTACK){
             ArrayList<Card> tmp=new ArrayList<>();

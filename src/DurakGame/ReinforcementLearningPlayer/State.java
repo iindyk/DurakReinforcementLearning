@@ -20,7 +20,7 @@ public class State {
     public ActionType actionType;
     public int roundNumber;
 
-    public static final int NUMBER_OF_CLUSTERS=50;
+    static final int NUMBER_OF_CLUSTERS=50;
 
     public enum ActionType{
         ATTACK,
@@ -44,7 +44,7 @@ public class State {
                     "}\n";
         }
 
-        public StateAction(State state, ArrayList<Card> action) {
+        StateAction(State state, ArrayList<Card> action) {
             this.state = state;
             this.action = action;
         }
@@ -58,8 +58,8 @@ public class State {
 
     public State(){}
 
-    public State(ArrayList<Card> hand, ArrayList<Card> outOfTheGame, ArrayList<Card> enemyKnownCards,ActionType actionType,
-                 ArrayList<Card> enemyAttack,ArrayList<Card> cardsOnTable,int roundNumber) throws EmptyEnemyAttackException, UndefinedActionException{
+    State(ArrayList<Card> hand, ArrayList<Card> outOfTheGame, ArrayList<Card> enemyKnownCards, ActionType actionType,
+          ArrayList<Card> enemyAttack, ArrayList<Card> cardsOnTable, int roundNumber) throws EmptyEnemyAttackException, UndefinedActionException{
         if (actionType==ActionType.DEFENCE && enemyAttack.size()==0) throw new EmptyEnemyAttackException();
         if (!(actionType==ActionType.DEFENCE||actionType==ActionType.ATTACK)) throw new UndefinedActionException();
         this.enemyAttack=enemyAttack;
@@ -71,7 +71,7 @@ public class State {
         this.enemyKnownCards = enemyKnownCards;
     }
 
-    public State(State state){
+    State(State state){
         this.actionType=state.actionType;
         this.enemyAttack=new ArrayList<>(state.enemyAttack);
         this.roundNumber=state.roundNumber;
@@ -105,7 +105,7 @@ public class State {
                 "}\n";
     }
 
-    public static class EmptyEnemyAttackException extends Exception{}
+    static class EmptyEnemyAttackException extends Exception{}
 
-    public static class UndefinedActionException extends Exception {}
+    static class UndefinedActionException extends Exception {}
 }

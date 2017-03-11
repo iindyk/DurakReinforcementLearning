@@ -9,11 +9,11 @@ import java.util.Arrays;
  * Created by HP on 04.02.2017.
  */
 public class StateValueFunction {
-    public static final double DISCOUNT_FACTOR = 0.5;
+    private static final double DISCOUNT_FACTOR = 0.5;
     public static final double LEARNING_FACTOR = 0.1;
     public static final double RANDOM_FACTOR = 0.1;
-    public static final int FEATURES_NUMBER = 2;
-    public double[] coefficients = new double[FEATURES_NUMBER];
+    static final int FEATURES_NUMBER = 2;
+    double[] coefficients = new double[FEATURES_NUMBER];
 
     private StateValueFunction() {}
 
@@ -24,11 +24,11 @@ public class StateValueFunction {
                 "}\n";
     }
 
-    public StateValueFunction(double[] coefficients) {
+    StateValueFunction(double[] coefficients) {
         this.coefficients = coefficients;
     }
 
-    public double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
+    double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
         State newState = RLPlayer.nextState(currentState, action);
         double result = 0;
         for (int i = 0; i < FEATURES_NUMBER; i++) {
@@ -44,7 +44,7 @@ public class StateValueFunction {
         return result;
     }
 
-    public static double getBasisFunctionValue(int i, State state) {
+    static double getBasisFunctionValue(int i, State state) {
         if (i == 0) {
             int sum = 0;
             for (Card card :

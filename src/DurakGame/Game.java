@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by igor on 03.10.16.
@@ -17,6 +19,7 @@ public class Game {
     public static int roundNumber;
     public static ArrayList<Card> cardsOnTable=new ArrayList<>();
     public static ArrayList<Card> outOfTheGame=new ArrayList<>();
+    static final Logger logger=Logger.getLogger(Game.class.getName());
 
     public static HashMap<String,Integer> winnersTable=new HashMap<>();
 
@@ -38,7 +41,6 @@ public class Game {
     public Game(Player[] players) throws Card.TrumpIsNotDefinedException, EndlessGameException {
         players=players;
         deck=Card.createDeck();
-        //System.out.println("Trump card is "+trumpCard);//todo logger
         for (Player player: players
              ) {
             player.state.hand.clear();
@@ -50,9 +52,11 @@ public class Game {
             for (int i = 0; i <6 ; i++) {
                 player.takeCardFromDeck();
             }
+            logger.log(Level.INFO,player.name+"'s hand is "+player.state.hand);
             player.state.hiddenCards.addAll(deck);
         }
         setTrumpCard(deck.get(0));
+        logger.log(Level.INFO,"Trump card is "+trumpCard);
         Card.defineValuesWithTrump(players[0].state.hand);
         Card.defineValuesWithTrump(players[1].state.hand);
 
@@ -64,51 +68,66 @@ public class Game {
         int attackedID=random.nextInt(2);
         Player attacker=players[attackedID];
         attacker.state.actionType= State.ActionType.ATTACK;
+        logger.log(Level.INFO,"First attacker is "+attacker.name);
+
         Player defender=players[1-attackedID];
         defender.state.actionType= State.ActionType.DEFENCE;
+        logger.log(Level.INFO,"Defender is "+defender.name);
+
         Player transitPlayer;
         roundNumber=0;
+        boolean newAttackerTakesFirst = false;
+
         while (attacker.state.hand.size()!=0 && defender.state.hand.size()!=0 && roundNumber<1000) {
             for (Player player: players) player.state.roundNumber=roundNumber;
+            logger.log(Level.INFO,"Round #"+roundNumber);
             ArrayList<Card> attackCards;
             ArrayList<Card> defenceCards;
             while (attacker.canAttack()&&!(attackCards=attacker.attack()).isEmpty()) {
                 cardsOnTable.addAll(attackCards);
-                //System.out.println("attacker is "+attacker.name+"\n"+attacker.state+"\n attack is "+attackCards);
+                logger.log(Level.INFO,attacker.name+" attacks with "+attackCards+"; cards on the table "+cardsOnTable);
                 if (defender.canDefend(attackCards)&&!(defenceCards =defender.defend(attackCards)).isEmpty()) {
                     cardsOnTable.addAll(defenceCards);
                     attacker.state.hiddenCards.removeAll(defenceCards);
                     attacker.state.enemyKnownCards.removeAll(defenceCards);
-                    //System.out.println("defender is "+defender.name+"\n"+defender.state+"\n attack is "+ defenceCards);
+                    logger.log(Level.INFO, defender.name+" defends with "+ defenceCards+"; cards on the table "+cardsOnTable);
                     if (!attacker.canAttack()) {
                         transitPlayer=attacker;
                         attacker=defender;
                         defender=transitPlayer;
                         attacker.state.actionType= State.ActionType.ATTACK;
                         defender.state.actionType= State.ActionType.DEFENCE;
+                        newAttackerTakesFirst=false;
                         break;
                     }
                 }
                 else {
+                    logger.log(Level.INFO,defender.name+" takes cards.");
                     defender.takeCards(cardsOnTable);
                     attacker.state.enemyKnownCards.addAll(cardsOnTable);
-                    //System.out.println(defender.name + " takes cards "+cardsOnTable);
-                    //System.out.println("defender state is "+defender.state);
+                    newAttackerTakesFirst=true;
                     break;
                 }
             }
             cardsOnTable.clear();
-            while (attacker.state.hand.size()<6&&deck.size()!=0) attacker.takeCardFromDeck();
-            while (defender.state.hand.size()<6&&deck.size()!=0) defender.takeCardFromDeck();
+            if (newAttackerTakesFirst){
+                while (attacker.state.hand.size()<6&&deck.size()!=0) attacker.takeCardFromDeck();
+                while (defender.state.hand.size()<6&&deck.size()!=0) defender.takeCardFromDeck();
+            }
+            else {
+                while (defender.state.hand.size()<6&&deck.size()!=0) defender.takeCardFromDeck();
+                while (attacker.state.hand.size()<6&&deck.size()!=0) attacker.takeCardFromDeck();
+            }
+
             roundNumber++;
         }
         if (attacker.state.hand.size()==0) {
-            //System.out.println(attacker.name+" wins!");
+            logger.log(Level.INFO,attacker.name+" wins!");
             winnersTable.put(attacker.name,winnersTable.get(attacker.name)+1);
         }
         else if (roundNumber==999) throw new EndlessGameException();
         else    {
-            //System.out.println(defender.name+ " wins!");
+            logger.log(Level.INFO,defender.name+" wins!");
             winnersTable.put(defender.name,winnersTable.get(defender.name)+1);
         }
     }
@@ -125,6 +144,7 @@ public class Game {
     public static void setWinnersTable(Player[] players){
         winnersTable.put(players[0].name,0);
         winnersTable.put(players[1].name,0);
+        logger.log(Level.INFO,"Players are "+players[0].name+" and "+players[1].name);
     }
 
     public class EndlessGameException extends Exception{}

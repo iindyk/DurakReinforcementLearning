@@ -1,13 +1,8 @@
 package DurakGame;
 
-
-import DurakGame.ReinforcementLearningPlayer.State;
-
 import java.util.ArrayList;
 import java.util.Random;
 
-import static DurakGame.Game.deck;
-import static DurakGame.Game.outOfTheGame;
 
 /**
  * Created by igor.indyk on 11/17/2016.

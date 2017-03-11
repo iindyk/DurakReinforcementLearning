@@ -4,12 +4,15 @@ import DurakGame.ReinforcementLearningPlayer.State;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+
+import static DurakGame.Game.logger;
 
 /**
  * Created by igor on 11.10.16.
  */
 public abstract class Player {
-    public String name;
+    protected String name;
     public State state=new State();
 
 
@@ -108,13 +111,14 @@ public abstract class Player {
         Game.deck.remove(Game.deck.size()-1);
         this.state.hand.add(card);
         this.state.hiddenCards.remove(card);
+        logger.log(Level.INFO,this.name+" takes ["+card+"] from deck");
     }
 
-    public void takeCard(Card card){
+    private void takeCard(Card card){
         this.state.hand.add(card);
     }
 
-    public void takeCards(ArrayList<Card> cards){
+    void takeCards(ArrayList<Card> cards){
         for (Card card:
              cards) {
             takeCard(card);
