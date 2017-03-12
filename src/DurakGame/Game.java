@@ -38,7 +38,7 @@ public class Game {
 
     private Game(){}
 
-    public Game(Player[] players) throws Card.TrumpIsNotDefinedException, EndlessGameException {
+    public Game(Player[] players) throws Card.TrumpIsNotDefinedException, EndlessGameException, Card.UnknownSuitException {
         players=players;
         deck=Card.createDeck();
         for (Player player: players
@@ -117,6 +117,10 @@ public class Game {
             else {
                 while (defender.state.hand.size()<6&&deck.size()!=0) defender.takeCardFromDeck();
                 while (attacker.state.hand.size()<6&&deck.size()!=0) attacker.takeCardFromDeck();
+            }
+            if (deck.size()<2) {
+                attacker.state.enemyKnownCards=defender.state.hand;
+                defender.state.enemyKnownCards=attacker.state.hand;
             }
 
             roundNumber++;

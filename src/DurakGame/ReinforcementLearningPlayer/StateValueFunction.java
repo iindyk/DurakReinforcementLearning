@@ -4,6 +4,7 @@ import DurakGame.Card;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * Created by HP on 04.02.2017.
@@ -29,7 +30,11 @@ public class StateValueFunction {
     }
 
     double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
-        State newState = RLPlayer.nextState(currentState, action);
+        State newState = new State();
+        for (Map.Entry<State,Double> mentry:
+             RLPlayer.nextStates(currentState, action).entrySet()) {
+            newState=mentry.getKey();
+        }
         double result = 0;
         for (int i = 0; i < FEATURES_NUMBER; i++) {
             result += this.coefficients[i] * (getBasisFunctionValue(i, newState) - getBasisFunctionValue(i, currentState));

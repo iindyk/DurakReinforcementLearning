@@ -15,6 +15,7 @@ import static java.lang.StrictMath.abs;
 'c' - club
 's' - spade
 '\0' - unknown
+'j j' - hidden card
  */
 public class Card {
     public char value;
@@ -23,7 +24,8 @@ public class Card {
     public int valueIntWithTrump;
     private Card(){}
 
-    public Card(char value, char suit){
+    public Card(char value, char suit) throws UnknownSuitException {
+        if (suit!='h' && suit!='d' && suit!='c' && suit!='s') throw new UnknownSuitException();
         this.value=value;
         this.suit=suit;
         if (Character.isDigit(value)) {
@@ -80,6 +82,11 @@ public class Card {
 
     public Card(int valueIntWithTrump){
         this.valueIntWithTrump=valueIntWithTrump;
+        if (valueIntWithTrump==24) {
+            this.value='j';//joker - hidden card
+            this.suit='j';
+            return;
+        }
         if (valueIntWithTrump>14) {
             this.valueInt=valueIntWithTrump-9;
             this.suit=Game.getTrumpCard().suit;
@@ -114,7 +121,7 @@ public class Card {
         return beats(card, Game.getTrumpCard().suit);
     }
 
-    public static ArrayList<Card> createDeck(){
+    public static ArrayList<Card> createDeck() throws UnknownSuitException {
         ArrayList<Card> result=new ArrayList<>();
         Card[] sortedDeck={new Card('6','h'),new Card('7','h'),new Card('8','h'),new Card('9','h'),new Card('t','h'),new Card('j','h'),
                 new Card('q','h'), new Card('k','h'), new Card('a','h'),
@@ -235,4 +242,6 @@ public class Card {
     }
 
     public class TrumpIsNotDefinedException extends Exception{}
+
+    public class UnknownSuitException extends Exception{}
 }

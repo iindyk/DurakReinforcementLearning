@@ -4,6 +4,7 @@ import DurakGame.ReinforcementLearningPlayer.*;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.logging.Formatter;
 import java.util.HashMap;
 import java.util.logging.FileHandler;
@@ -22,6 +23,30 @@ public class Main {
     public static void main(String[] args){
         //value functions adjustment test
         try{
+            Game.deck=Card.createDeck();
+            ArrayList<Card> enemyKnownCards=new ArrayList<>();
+            //hand.add(new Card('6','d'));
+            enemyKnownCards.add(new Card('7','s'));
+            enemyKnownCards.add(new Card('7','d'));
+            Game.setTrumpCard(new Card('a','s'));
+            ArrayList<Card> action=new ArrayList<>();
+            ArrayList<Card> hand=new ArrayList<>();
+            hand.add(new Card('6','c'));
+            hand.add(new Card('a','h'));
+            hand.add(new Card('7','c'));
+            hand.add(new Card('6','s'));
+            action.add(hand.get(0));
+            Game.deck.removeAll(hand);
+            Game.deck.removeAll(action);
+            Game.deck.removeAll(enemyKnownCards);
+            ArrayList<Card> cardsOnTable=new ArrayList<>();
+            State state=new State(hand,new ArrayList<>(),enemyKnownCards,State.ActionType.ATTACK,
+                    new ArrayList<>(),cardsOnTable,0);
+            state.hiddenCards=new HashSet<>(Game.deck);
+            System.out.println(state);
+            System.out.println(RLPlayer.nextStates(state,action));
+
+/*
             Handler fileHandler=new FileHandler("./logs/log.log");
             Formatter singleLineFormatter=new SingleLineFormatter();
             logger.addHandler(fileHandler);
@@ -33,6 +58,7 @@ public class Main {
             RLPlayer player0=new RLPlayer();
             SimpleAgentPlayer player1=new SimpleAgentPlayer();
             Player[] players=new Player[]{player0,player1};
+*/
             //write
 /*
             RLFileReader reader=new RLFileReader();
@@ -41,14 +67,14 @@ public class Main {
             player0.writeValueFunctionsToDB(player0.valueFunctions);
 */
             //read
-
+/*
             player0.readValueFunctionsFromDB();
             Game.setWinnersTable(players);
             for (int i = 0; i <10 ; i++) {
                 Game game=new Game(players);
             }
             logger.log(Level.INFO,Game.getWinnersTable());
-
+*/
 /*            Player player0=new RandomAgentPlayer();
             Player player1=new SimpleAgentPlayer();
             Player[] players=new Player[]{player0,player1};
@@ -58,7 +84,8 @@ public class Main {
 */
         }
         catch (Exception e){
-            logger.log(Level.WARNING,"Exception occurred "+e);
+            logger.log(Level.WARNING,"Exception occurred "+e.getMessage());
+            e.printStackTrace();
         }
     }
 }

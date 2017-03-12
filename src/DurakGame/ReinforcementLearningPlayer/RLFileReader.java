@@ -15,7 +15,7 @@ import java.util.ArrayList;
  */
 public class RLFileReader  {
 
-    public ArrayList<State.StateAction> readStateActionsFromTxd(String path){
+    public ArrayList<State.StateAction> readStateActionsFromTxd(String path) throws Card.UnknownSuitException {
         ArrayList<State.StateAction> stateActions=new ArrayList<>();
         int linesCount=0;
         long gameId=0;

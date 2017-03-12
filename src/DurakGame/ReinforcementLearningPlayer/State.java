@@ -15,6 +15,7 @@ public class State {
     public ArrayList<Card> outOfTheGame=new ArrayList<>();
     public ArrayList<Card> enemyKnownCards=new ArrayList<>();
     public HashSet<Card> hiddenCards=new HashSet<>();
+
     public ArrayList<Card> cardsOnTable=new ArrayList<>();
     public ArrayList<Card> enemyAttack=new ArrayList<>();
     public ActionType actionType;
@@ -58,7 +59,7 @@ public class State {
 
     public State(){}
 
-    State(ArrayList<Card> hand, ArrayList<Card> outOfTheGame, ArrayList<Card> enemyKnownCards, ActionType actionType,
+    public State(ArrayList<Card> hand, ArrayList<Card> outOfTheGame, ArrayList<Card> enemyKnownCards, ActionType actionType,
           ArrayList<Card> enemyAttack, ArrayList<Card> cardsOnTable, int roundNumber) throws EmptyEnemyAttackException, UndefinedActionException{
         if (actionType==ActionType.DEFENCE && enemyAttack.size()==0) throw new EmptyEnemyAttackException();
         if (!(actionType==ActionType.DEFENCE||actionType==ActionType.ATTACK)) throw new UndefinedActionException();
@@ -92,6 +93,37 @@ public class State {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof State)) return false;
+
+        State state = (State) o;
+
+        if (roundNumber != state.roundNumber) return false;
+        if (!hand.equals(state.hand)) return false;
+        if (outOfTheGame != null ? !outOfTheGame.equals(state.outOfTheGame) : state.outOfTheGame != null) return false;
+        if (enemyKnownCards != null ? !enemyKnownCards.equals(state.enemyKnownCards) : state.enemyKnownCards != null)
+            return false;
+        if (!hiddenCards.equals(state.hiddenCards)) return false;
+        if (cardsOnTable != null ? !cardsOnTable.equals(state.cardsOnTable) : state.cardsOnTable != null) return false;
+        if (enemyAttack != null ? !enemyAttack.equals(state.enemyAttack) : state.enemyAttack != null) return false;
+        return actionType == state.actionType;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = hand.hashCode();
+        result = 31 * result + (outOfTheGame != null ? outOfTheGame.hashCode() : 0);
+        result = 31 * result + (enemyKnownCards != null ? enemyKnownCards.hashCode() : 0);
+        result = 31 * result + hiddenCards.hashCode();
+        result = 31 * result + (cardsOnTable != null ? cardsOnTable.hashCode() : 0);
+        result = 31 * result + (enemyAttack != null ? enemyAttack.hashCode() : 0);
+        result = 31 * result + actionType.hashCode();
+        result = 31 * result + roundNumber;
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "State{" +
                 "actionType=" + actionType +
@@ -101,7 +133,7 @@ public class State {
                 "\n, enemyAttack=" + enemyAttack +
                 ", cardsOnTable=" + cardsOnTable+
                 ", roundNumber=" + roundNumber+
-                "\n, hiddenCards="+hiddenCards+"\nhidden cards number is "+hiddenCards.size()+
+                "\n, hiddenCards="+hiddenCards+
                 "}\n";
     }
 

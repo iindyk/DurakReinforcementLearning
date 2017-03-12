@@ -12,6 +12,8 @@ import scpsolver.problems.LinearProgram;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import static DurakGame.Conn.conn;
 import static DurakGame.Conn.resSet;
@@ -84,184 +86,105 @@ public class RLPlayer extends Player {
         return 0;
     }
 
-    static State nextState(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
-        ArrayList<Card> nextHand=new ArrayList<>();
-        nextHand.addAll(currentState.hand);
-        nextHand.removeAll(action);
-        ArrayList<Card> nextOutOfTheGame=new ArrayList<>();
-        nextOutOfTheGame.addAll(currentState.outOfTheGame);
-        ArrayList<Card> nextEnemyKnownCards=new ArrayList<>();
-        nextEnemyKnownCards.addAll(currentState.enemyKnownCards);
-        State.ActionType nextActionType;
-        ArrayList<Card> nexEnemyAttack=new ArrayList<>();
-        //simplest prediction
-        //getting average hidden card
+    public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
+        State nextState=new State(currentState);
+        nextState.hand.removeAll(action);
+        nextState.cardsOnTable.addAll(action);
+
         int sumVal =0;
-        int i;
         for (Card card: currentState.hiddenCards) sumVal +=card.valueIntWithTrump;
         Card avgHiddenCard=new Card(currentState.hiddenCards.isEmpty()? 0:sumVal /currentState.hiddenCards.size());
         if (sumVal !=0) {
-            for (int j = 0; j <action.size() ; j++) nextHand.add(avgHiddenCard);
+            for (int j = 0; j <action.size() && Game.deck.size()<=j; j++) nextState.hand.add(avgHiddenCard);
         }
+        HashMap<State,Double> r=new HashMap<>();
         if (currentState.actionType== State.ActionType.ATTACK){
-            //getting average beating card
-            for (Card card:
-                 action) {
-                sumVal =0;
-                i=0;
-                for (Card hcard:
-                     currentState.hiddenCards) {
-                    if (hcard.beats(card)) {
-                        i++;
-                        sumVal +=hcard.valueIntWithTrump;
+            if ((action.size()!=0 && (Player.canDefend(nextState.enemyKnownCards,action) || nextState.hiddenCards.size()>0))){
+                ArrayList<ArrayList<Card>> possibleDefences=possibleDefences(nextState.enemyKnownCards,action);
+                ArrayList<Card> hiddenDefence=new ArrayList<>();
+                for (Card card: action) hiddenDefence.add(new Card(24));
+                possibleDefences.add(hiddenDefence);
+                for (ArrayList<Card> possibleDefence :
+                        possibleDefences) {
+                    if (possibleDefence.isEmpty()){
+                        nextState.enemyKnownCards.addAll(nextState.cardsOnTable);
+                        nextState.cardsOnTable.clear();
+                        State nextState1=new State(nextState);
+                        nextState1.roundNumber++;
+                        r.put(nextState1,1d);
+                        continue;
+                    }
+                    nextState.cardsOnTable=new ArrayList<>(currentState.cardsOnTable);
+                    nextState.cardsOnTable.addAll(action);
+                    nextState.cardsOnTable.addAll(possibleDefence);
+                    nextState.enemyKnownCards=new ArrayList<>(currentState.enemyKnownCards);
+                    nextState.enemyKnownCards.removeAll(possibleDefence);
+                    for (ArrayList<Card> possibleAdditionalAttack:
+                         possibleAttacks(nextState.hand,nextState.cardsOnTable)) {
+                        r.putAll(nextStates(nextState,possibleAdditionalAttack));
                     }
                 }
-                if (sumVal !=0) nextOutOfTheGame.add(new Card(sumVal /(i+1)));
-            }
-            if (sumVal ==0) {
-                nextActionType= State.ActionType.ATTACK;
-                nextEnemyKnownCards.addAll(action);
             }
             else {
-                nextActionType= State.ActionType.DEFENCE;
-                nexEnemyAttack.add(avgHiddenCard);
-            }
-
-        }
-        else{
-            if (action.size()==0) {
-                nextHand.addAll(Game.cardsOnTable);
-                nextActionType= State.ActionType.DEFENCE;
-                nexEnemyAttack.add(avgHiddenCard);
-            }
-            else {
-                nextHand.removeAll(action);
-                nextActionType= State.ActionType.ATTACK;
-            }
-        }
-        return new State(nextHand,nextOutOfTheGame,nextEnemyKnownCards,nextActionType,nexEnemyAttack, null,
-                currentState.roundNumber+1);
-    }
-
-    private static ArrayList<ArrayList<Card>> possibleActions(State currentState) throws Card.TrumpIsNotDefinedException {
-        ArrayList<ArrayList<Card>> possibleActions=new ArrayList<>(new ArrayList<>());
-        if (currentState.actionType== State.ActionType.ATTACK){
-            ArrayList<Card> tmp=new ArrayList<>();
-            ArrayList<Card> retainedHand=new ArrayList<>();
-            retainedHand.addAll(currentState.hand);
-
-            int in=0;
-            if (!(currentState.cardsOnTable.isEmpty())){
-                possibleActions.add(new ArrayList<>());
-                for (Card cardOnHand:
-                        currentState.hand) {
-                    for (Card cardOnTable:
-                            currentState.cardsOnTable) {
-                        if (cardOnHand.value==cardOnTable.value) in=1;
-                    }
-                    if (in==0) retainedHand.remove(cardOnHand);
-                    else in=0;
+                //recursion base case
+                if (action.size()!=0) {
+                    nextState.actionType= State.ActionType.ATTACK;
+                    nextState.enemyKnownCards.addAll(nextState.cardsOnTable);
+                    nextState.cardsOnTable.clear();
                 }
-            }
-
-            for (int i = 0; i <retainedHand.size() ; i++) {
-                tmp.add(retainedHand.get(i));
-                possibleActions.add(new ArrayList<>(tmp));
-                for (int j = i+1; j < retainedHand.size(); j++) {
-                    if (retainedHand.get(i).value==retainedHand.get(j).value) {
-                        tmp.add(retainedHand.get(j));
-                        possibleActions.add(new ArrayList<>(tmp));
-                        for (int k = j+1; k <retainedHand.size(); k++) {
-                            if (retainedHand.get(j).value==retainedHand.get(k).value){
-                                tmp.add(retainedHand.get(k));
-                                possibleActions.add(new ArrayList<>(tmp));
-                                for (int l = k+1; l <retainedHand.size() ; l++) {
-                                    if (retainedHand.get(k).value==retainedHand.get(l).value) {
-                                        tmp.add(retainedHand.get(l));
-                                        possibleActions.add(new ArrayList<>(tmp));
-                                    }
-                                }
-                                tmp.clear();
-                            }
-                        }
-                        tmp.clear();
-                    }
+                else {
+                    nextState.actionType= State.ActionType.DEFENCE;
+                    nextState.outOfTheGame.addAll(nextState.cardsOnTable);
+                    nextState.cardsOnTable.clear();
+                    nextState.enemyAttack.add(avgHiddenCard);
                 }
-                tmp.clear();
+                nextState.roundNumber++;
+                r.put(new State(nextState),1d);
+                return r;
             }
         }
+        ///////////////////////////////
         else {
-            possibleActions.add(new ArrayList<>());
-            ArrayList<Card> availableHand0 = new ArrayList<>();
-            ArrayList<Card> availableHand1 = new ArrayList<>();
-            ArrayList<Card> availableHand2 = new ArrayList<>();
-            ArrayList<Card> tmp = new ArrayList<>();
-            for (int i = 0; i < currentState.hand.size(); i++) {
-                tmp.clear();
-                availableHand0.clear();
-                availableHand0.addAll(currentState.hand);
-                if (currentState.hand.get(i).beats(currentState.enemyAttack.get(0))) {
-                    tmp.add(currentState.hand.get(i));
-                    availableHand0.remove(currentState.hand.get(i));
-                    if (currentState.enemyAttack.size() > 1) {
-                        availableHand1.clear();
-                        availableHand1.addAll(availableHand0);
-                        for (Card card :
-                                availableHand0) {
-                            if (card.beats(currentState.enemyAttack.get(1))) {
-                                availableHand1.remove(card);
-                                tmp.add(card);
-                                if (currentState.enemyAttack.size() > 2) {
-                                    availableHand2.clear();
-                                    availableHand2.addAll(availableHand1);
-                                    for (Card card1 :
-                                            availableHand1) {
-                                        if (card1.beats(currentState.enemyAttack.get(2))) {
-                                            availableHand2.remove(card1);
-                                            tmp.add(card1);
-                                            if (currentState.enemyAttack.size() > 3) {
-                                                for (Card card2 :
-                                                        availableHand2) {
-                                                    if (card2.beats(currentState.enemyAttack.get(3))) {
-                                                        tmp.add(card2);
-                                                        possibleActions.add(new ArrayList<>(tmp));
-                                                        tmp.clear();
-                                                    }
-                                                }
-                                            } else {
-                                                possibleActions.add(new ArrayList<>(tmp));
-                                                tmp.remove(2);
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    possibleActions.add(new ArrayList<>(tmp));
-                                    tmp.remove(1);
-                                }
-
-                            }
-                        }
-
-                    } else {
-                        possibleActions.add(new ArrayList<>(tmp));
-                        tmp.remove(0);
+            if (action.size() == 0) {
+                //recursion base case
+                nextState.hand.addAll(nextState.cardsOnTable);
+                nextState.hiddenCards.removeAll(nextState.cardsOnTable);
+                nextState.cardsOnTable.clear();
+                nextState.enemyAttack.clear();
+                nextState.enemyAttack.add(avgHiddenCard);
+                nextState.roundNumber++;
+                r.put(new State(nextState), 1d);
+                return r;
+            } else {
+                for (ArrayList<Card> possibleAdditionalAttack :
+                        Player.possibleAttacks(nextState.enemyKnownCards, nextState.cardsOnTable)) {
+                    nextState.cardsOnTable = new ArrayList<>(currentState.cardsOnTable);
+                    nextState.cardsOnTable.addAll(action);
+                    nextState.cardsOnTable.addAll(possibleAdditionalAttack);
+                    nextState.enemyKnownCards=new ArrayList<>(currentState.enemyKnownCards);
+                    nextState.enemyKnownCards.removeAll(possibleAdditionalAttack);
+                    if (possibleAdditionalAttack.size()==0){
+                        State nextState1=new State(nextState);
+                        for (int j = 0; j < action.size() && Game.deck.size() <= j; j++) nextState1.hand.add(avgHiddenCard);
+                        nextState1.outOfTheGame.addAll(nextState1.cardsOnTable);
+                        nextState1.hand.removeAll(nextState1.cardsOnTable);
+                        nextState1.enemyKnownCards.removeAll(nextState1.cardsOnTable);
+                        nextState1.cardsOnTable.clear();
+                        nextState1.actionType= State.ActionType.ATTACK;
+                        nextState1.roundNumber++;
+                        r.put(nextState1,1d);
+                        continue;
                     }
-
-
-                }
-
-            }
-            ArrayList<ArrayList<Card>> possibleActionsCopy=new ArrayList<>(possibleActions);
-            for (int i = 0; i <possibleActionsCopy.size() ; i++) {
-                for (int j = i+1; j <possibleActionsCopy.size() ; j++) {
-                    ArrayList<Card> l1=possibleActionsCopy.get(i);
-                    ArrayList<Card> l2=possibleActionsCopy.get(j);
-                    if (l1.containsAll(l2)&&l2.containsAll(l1)) possibleActions.remove(l2);
+                    for (ArrayList<Card> possibleAdditionalDefence :
+                            Player.possibleDefences(nextState.hand, possibleAdditionalAttack)) {
+                        r.putAll(nextStates(nextState, possibleAdditionalDefence));
+                    }
                 }
             }
         }
 
-        return possibleActions;
+        for (Map.Entry<State,Double> mentry: r.entrySet()) mentry.setValue((double)1/r.size());
+        return r;
     }
 
     public void addToHistory(State state,ArrayList<Card> action, float reward){//reward?
@@ -290,12 +213,22 @@ public class RLPlayer extends Player {
             double[] accumulatedCoef=new double[StateValueFunction.FEATURES_NUMBER];
             for (State.StateAction stateAction: stateActions) {
                 double[] lpCoef=new double[StateValueFunction.FEATURES_NUMBER];
-                State nextState=nextState(stateAction.state,stateAction.action);
+                State nextState=new State();
+                for (Map.Entry<State,Double> mentry:
+                        nextStates(stateAction.state,stateAction.action).entrySet()) {
+                    nextState=mentry.getKey();
+                }
+                //todo finish
                 ArrayList<ArrayList<Card>> possibleActions=possibleActions(state);
                 for (ArrayList<Card> possibleAction:
                      possibleActions) {
                     if (!(stateAction.action.containsAll(possibleAction)&&possibleAction.containsAll(stateAction.action))){
-                        State nextPossibleState=nextState(stateAction.state,possibleAction);
+                        State nextPossibleState=new State();
+                        for (Map.Entry<State,Double> mentry:
+                                nextStates(stateAction.state,possibleAction).entrySet()) {
+                            nextPossibleState=mentry.getKey();
+                        }
+                        //todo finish
                         for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++) {
                             lpCoef[j]+=(StateValueFunction.getBasisFunctionValue(j,nextPossibleState)-StateValueFunction.getBasisFunctionValue(j,nextState));
                         }
