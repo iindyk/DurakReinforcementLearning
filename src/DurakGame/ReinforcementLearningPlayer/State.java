@@ -12,7 +12,7 @@ import java.util.Random;
  */
 public class State {
     public ArrayList<Card> hand=new ArrayList<>();
-    public ArrayList<Card> outOfTheGame=new ArrayList<>();
+    public HashSet<Card> outOfTheGame=new HashSet<>();
     public ArrayList<Card> enemyKnownCards=new ArrayList<>();
     public HashSet<Card> hiddenCards=new HashSet<>();
 
@@ -60,7 +60,7 @@ public class State {
 
     public State(){}
 
-    public State(ArrayList<Card> hand, ArrayList<Card> outOfTheGame, ArrayList<Card> enemyKnownCards, ActionType actionType,
+    public State(ArrayList<Card> hand, HashSet<Card> outOfTheGame, ArrayList<Card> enemyKnownCards, ActionType actionType,
           ArrayList<Card> enemyAttack, ArrayList<Card> cardsOnTable, int roundNumber) throws EmptyEnemyAttackException, UndefinedActionException{
         if (actionType==ActionType.DEFENCE && enemyAttack.size()==0) throw new EmptyEnemyAttackException();
         if (!(actionType==ActionType.DEFENCE||actionType==ActionType.ATTACK)) throw new UndefinedActionException();
@@ -80,14 +80,14 @@ public class State {
         this.cardsOnTable=new ArrayList<>(state.cardsOnTable);
         this.hiddenCards=new HashSet<>(state.hiddenCards);
         this.enemyKnownCards=new ArrayList<>(state.enemyKnownCards);
-        this.outOfTheGame=new ArrayList<>(state.outOfTheGame);
+        this.outOfTheGame=new HashSet<>(state.outOfTheGame);
         this.hand=new ArrayList<>(state.hand);
     }
 
     public int distTo(State state){
         int r=0;
         r+=Card.distTo(this.hand,state.hand);
-        r+=Card.distTo(this.outOfTheGame,state.outOfTheGame);
+        //r+=Card.distTo(this.outOfTheGame,state.outOfTheGame);
         r+=Card.distTo(this.enemyKnownCards,state.enemyKnownCards);
 
         return r;
@@ -107,8 +107,7 @@ public class State {
             return false;
         if (!hiddenCards.equals(state.hiddenCards)) return false;
         if (cardsOnTable != null ? !cardsOnTable.equals(state.cardsOnTable) : state.cardsOnTable != null) return false;
-        if (enemyAttack != null ? !enemyAttack.equals(state.enemyAttack) : state.enemyAttack != null) return false;
-        return actionType == state.actionType;
+        return (enemyAttack != null ? enemyAttack.equals(state.enemyAttack) : state.enemyAttack == null) && actionType == state.actionType;
     }
 
     @Override

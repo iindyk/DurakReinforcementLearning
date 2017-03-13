@@ -25,7 +25,7 @@ public class Card {
     private Card(){}
 
     public Card(char value, char suit) throws UnknownSuitException {
-        if (suit!='h' && suit!='d' && suit!='c' && suit!='s') throw new UnknownSuitException();
+        if (suit!='h' && suit!='d' && suit!='c' && suit!='s' && suit!='j') throw new UnknownSuitException();
         this.value=value;
         this.suit=suit;
         if (Character.isDigit(value)) {

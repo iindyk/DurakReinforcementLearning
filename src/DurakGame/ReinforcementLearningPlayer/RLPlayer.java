@@ -25,7 +25,7 @@ import static DurakGame.Conn.statmt;
  */
 public class RLPlayer extends Player {
     private static int count;
-    public ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
+    public static ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
     public ArrayList<StateValueFunction> valueFunctions=new ArrayList<>(State.NUMBER_OF_CLUSTERS);
 
     public RLPlayer(){
@@ -88,16 +88,25 @@ public class RLPlayer extends Player {
     }
 
     public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException {
-        System.out.println(currentState+"\n action "+action);
         if (currentState==null||action==null) return null;
         if (!currentState.hand.containsAll(action)) {
+            for (State.StateAction sa:
+                 historyStateActions) {
+                if (sa.state.equals(currentState)) System.out.println(sa.gameID);
+            }
             Game.logger.log(Level.WARNING,"problem is "+currentState+"action is"+action);
             throw new IncorrectActionException();
         }
         if (currentState.actionType== State.ActionType.DEFENCE && currentState.enemyAttack.isEmpty()) {
+            for (State.StateAction sa:
+                    historyStateActions) {
+                if (sa.state.equals(currentState)) System.out.println(sa.gameID);
+            }
             Game.logger.log(Level.WARNING,"problem is "+currentState+"action is"+action);
             throw new State.EmptyEnemyAttackException();
         }
+
+        //System.out.println(currentState+"\n action is "+action);
 
         State nextState=new State(currentState);
         nextState.hand.removeAll(action);
@@ -111,14 +120,23 @@ public class RLPlayer extends Player {
         }
         HashMap<State,Double> r=new HashMap<>();
         if (currentState.actionType== State.ActionType.ATTACK){
-            if (currentState.enemyKnownCards.isEmpty() && Player.possibleActions(nextState).isEmpty()){
-                State nextState1=new State(nextState);
-                nextState1.enemyKnownCards.addAll(action);
-                nextState1.cardsOnTable.clear();
-                r.put(nextState1,1d);
-                State nextState2=new State(nextState);
-                nextState2.cardsOnTable.add(new Card('j','j'));
-                r.put(nextState2,1d);
+            if (currentState.enemyKnownCards.isEmpty()){
+                for (ArrayList<Card> additionalAttack:
+                     Player.possibleAttacks(nextState.hand,nextState.cardsOnTable)) {
+                    State nextState1=new State(nextState);
+                    nextState1.enemyKnownCards.addAll(action);
+                    nextState1.enemyKnownCards.addAll(additionalAttack);
+                    nextState1.cardsOnTable.clear();
+                    r.put(nextState1,1d);
+                    State nextState2=new State(nextState);
+                    for (int i = 0; i <action.size()+additionalAttack.size() ; i++) {
+                        nextState2.cardsOnTable.add(new Card('j','j'));
+                    }
+                    nextState2.outOfTheGame.addAll(nextState2.cardsOnTable);
+                    nextState2.cardsOnTable.clear();
+                    nextState2.actionType= State.ActionType.DEFENCE;
+                    r.put(nextState2,1d);
+                }
             }
             else if ((action.size()!=0 && (Player.canDefend(nextState.enemyKnownCards,action) || nextState.hiddenCards.size()>0))){
                 ArrayList<ArrayList<Card>> possibleDefences=possibleDefences(nextState.enemyKnownCards,action);
@@ -142,7 +160,6 @@ public class RLPlayer extends Player {
                     nextState.enemyKnownCards.removeAll(possibleDefence);
                     for (ArrayList<Card> possibleAdditionalAttack:
                          possibleAttacks(nextState.hand,nextState.cardsOnTable)) {
-                        if (r.size()>100) return r;
                         r.putAll(nextStates(nextState,possibleAdditionalAttack));
                     }
                 }
@@ -207,7 +224,6 @@ public class RLPlayer extends Player {
                     for (ArrayList<Card> possibleAdditionalDefence :
                             Player.possibleDefences(nextState.hand, possibleAdditionalAttack)) {
                         //
-                        if (r.size()>100) return r;
                         r.putAll(nextStates(nextState, possibleAdditionalDefence));
                     }
                 }
@@ -219,11 +235,11 @@ public class RLPlayer extends Player {
     }
 
     public void addToHistory(State state,ArrayList<Card> action, float reward){//reward?
-        this.historyStateActions.add(new State.StateAction(state,action,0));
+        historyStateActions.add(new State.StateAction(state,action,0));
     }
 
     public void addToHistory(State.StateAction stateAction){
-        this.historyStateActions.add(stateAction);
+        historyStateActions.add(stateAction);
     }
 
     public void addToHistory(ArrayList<State.StateAction> stateActions){
@@ -309,5 +325,5 @@ public class RLPlayer extends Player {
         statmt.close();
     }
 
-    public static class IncorrectActionException extends Exception {}
+    static class IncorrectActionException extends Exception {}
 }

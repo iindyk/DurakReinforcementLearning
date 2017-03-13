@@ -2,10 +2,7 @@ package DurakGame;
 
 import DurakGame.ReinforcementLearningPlayer.State;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,7 +15,7 @@ public class Game {
     public static ArrayList<Card> deck=new ArrayList<>();
     public static int roundNumber;
     public static ArrayList<Card> cardsOnTable=new ArrayList<>();
-    public static ArrayList<Card> outOfTheGame=new ArrayList<>();
+    public static HashSet<Card> outOfTheGame=new HashSet<>();
     public static Player attacker;
     public static Player defender;
     public static final Logger logger=Logger.getLogger(Game.class.getName());
@@ -75,8 +72,6 @@ public class Game {
         Game.defender=players[1-attackedID];
         Game.defender.state.actionType= State.ActionType.DEFENCE;
         logger.log(Level.INFO,"Defender is "+Game.defender.name);
-        logger.log(Level.INFO,Game.defender.name+" state is "+Game.defender.state);
-
 
         Player transitPlayer;
         Game.roundNumber=0;
@@ -85,6 +80,9 @@ public class Game {
         while (Game.attacker.state.hand.size()!=0 && Game.defender.state.hand.size()!=0 && Game.roundNumber<1000) {
             for (Player player: players) player.state.roundNumber=Game.roundNumber;
             logger.log(Level.INFO,"Round #"+Game.roundNumber);
+            //
+            logger.log(Level.INFO,players[0].name+"state is "+players[0].state);
+            //
             ArrayList<Card> attackCards;
             ArrayList<Card> defenceCards;
             while (Game.attacker.canAttack()&&!(attackCards=Game.attacker.attack()).isEmpty()) {

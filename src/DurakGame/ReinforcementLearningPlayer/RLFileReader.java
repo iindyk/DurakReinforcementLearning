@@ -127,55 +127,71 @@ public class RLFileReader  {
 
                 }
                 else if (line.substring(2,4).equals("hv") && line.charAt(0)=='0'){
-                    //write attack & hand for 0 & change hand for 0 & set attack0=null
-                    player0.state.hiddenCards.removeAll(defence1);
-                    //stateActions0.add(new State.StateAction(new State(player0.state),new ArrayList<>(attack0)));
-                    player1.state.enemyAttack.clear();
-                    player1.state.enemyAttack.addAll(attack0);
-                    //write defence & hand for 1 & change hand for 1 & set defence1=null
-                    player1.state.hiddenCards.removeAll(attack0);
-                    stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(defence1),gameId));
-                    player0.state.hand.removeAll(attack0);
-                    player1.state.hand.removeAll(defence1);
-                    Game.outOfTheGame.addAll(defence1);
-                    Game.outOfTheGame.addAll(attack0);
-                    attack0.clear();
-                    defence1.clear();
-                    Game.cardsOnTable.clear();
-                    Game.roundNumber++;
-                    player0.state.roundNumber=Game.roundNumber;
-                    player1.state.roundNumber=Game.roundNumber;
-                    if (!(prevLine.substring(2,4).equals("be")|| prevLine.charAt(0)=='0')) {
-                        attacker=1;
-                        player1.state.actionType= State.ActionType.ATTACK;
+                    if (prevLine.charAt(0)=='0'){
+                        //stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(),gameId));
+                        player1.state.hand.addAll(Game.cardsOnTable);
+                        Game.cardsOnTable.clear();
+                        attack0.clear();
+                    }
+                    else {
+                        //write attack & hand for 0 & change hand for 0 & set attack0=null
+                        player0.state.hiddenCards.removeAll(defence1);
+                        //stateActions0.add(new State.StateAction(new State(player0.state),new ArrayList<>(attack0)));
                         player1.state.enemyAttack.clear();
-                        player0.state.actionType= State.ActionType.DEFENCE;
+                        player1.state.enemyAttack.addAll(attack0);
+                        //write defence & hand for 1 & change hand for 1 & set defence1=null
+                        player1.state.hiddenCards.removeAll(attack0);
+                        stateActions1.add(new State.StateAction(new State(player1.state), new ArrayList<>(defence1), gameId));
+                        player0.state.hand.removeAll(attack0);
+                        player1.state.hand.removeAll(defence1);
+                        Game.outOfTheGame.addAll(defence1);
+                        Game.outOfTheGame.addAll(attack0);
+                        attack0.clear();
+                        defence1.clear();
+                        Game.cardsOnTable.clear();
+                        Game.roundNumber++;
+                        player0.state.roundNumber = Game.roundNumber;
+                        player1.state.roundNumber = Game.roundNumber;
+                        if (!(prevLine.substring(2, 4).equals("be") || prevLine.charAt(0) == '0')) {
+                            attacker = 1;
+                            player1.state.actionType = State.ActionType.ATTACK;
+                            player1.state.enemyAttack.clear();
+                            player0.state.actionType = State.ActionType.DEFENCE;
+                        }
                     }
                 }
                 else if (line.substring(2,4).equals("hv") && line.charAt(0)=='1'){
-                    //write attack & hand for 1 & change hand for 1 & set attack1=null
-                    player1.state.hiddenCards.removeAll(defence0);
-                    //stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(attack1)));
-                    player0.state.enemyAttack.clear();
-                    player0.state.enemyAttack.addAll(attack1);
-                    //write defence & hand for 0 & change hand for 0 & set attack0=null
-                    player0.state.hiddenCards.removeAll(attack1);
-                    stateActions0.add(new State.StateAction(new State(player0.state),new ArrayList<>(defence0),gameId));
-                    player1.state.hand.removeAll(attack1);
-                    player0.state.hand.removeAll(defence0);
-                    Game.outOfTheGame.addAll(defence0);
-                    Game.outOfTheGame.addAll(attack1);
-                    attack1.clear();
-                    defence0.clear();
-                    Game.cardsOnTable.clear();
-                    Game.roundNumber++;
-                    player0.state.roundNumber=Game.roundNumber;
-                    player1.state.roundNumber=Game.roundNumber;
-                    if (!(prevLine.substring(2,4).equals("be")|| prevLine.charAt(0)=='1')) {
-                        attacker=0;
-                        player0.state.actionType= State.ActionType.ATTACK;
+                    if (prevLine.charAt(0)=='1'){
+                        //stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(),gameId));
+                        player0.state.hand.addAll(Game.cardsOnTable);
+                        Game.cardsOnTable.clear();
+                        attack1.clear();
+                    }
+                    else {
+                        //write attack & hand for 1 & change hand for 1 & set attack1=null
+                        player1.state.hiddenCards.removeAll(defence0);
+                        //stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(attack1)));
                         player0.state.enemyAttack.clear();
-                        player1.state.actionType= State.ActionType.DEFENCE;
+                        player0.state.enemyAttack.addAll(attack1);
+                        //write defence & hand for 0 & change hand for 0 & set attack0=null
+                        player0.state.hiddenCards.removeAll(attack1);
+                        stateActions0.add(new State.StateAction(new State(player0.state),new ArrayList<>(defence0),gameId));
+                        player1.state.hand.removeAll(attack1);
+                        player0.state.hand.removeAll(defence0);
+                        Game.outOfTheGame.addAll(defence0);
+                        Game.outOfTheGame.addAll(attack1);
+                        attack1.clear();
+                        defence0.clear();
+                        Game.cardsOnTable.clear();
+                        Game.roundNumber++;
+                        player0.state.roundNumber=Game.roundNumber;
+                        player1.state.roundNumber=Game.roundNumber;
+                        if (!(prevLine.substring(2,4).equals("be")|| prevLine.charAt(0)=='1')) {
+                            attacker=0;
+                            player0.state.actionType= State.ActionType.ATTACK;
+                            player0.state.enemyAttack.clear();
+                            player1.state.actionType= State.ActionType.DEFENCE;
+                        }
                     }
                 }
                 else if ((prevLine.length()==4||prevLine.substring(2,4).equals("be") ||prevLine.substring(2,4).equals("hv"))&& line.charAt(0)=='0' && attacker==0 && line.length()==4){

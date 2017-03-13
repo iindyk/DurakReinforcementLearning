@@ -66,15 +66,15 @@ public class StateValueFunction {
         else return -1;
     }
 
-    static State getStateWithMaxReward(HashMap<State,Double> states){
+    public static State getStateWithMaxReward(HashMap<State,Double> states){
         State s=new State();
-        double maxDefaultReward=-2;
+        double maxDefaultReward=-200;
         for (Map.Entry<State,Double> mentry:
                 states.entrySet()) {
             State sp=mentry.getKey();
             double r=0;
             for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++) {
-                r+=StateValueFunction.getBasisFunctionValue(j,s);
+                r+=StateValueFunction.getBasisFunctionValue(j,sp);
             }
             if (r>maxDefaultReward){
                 maxDefaultReward=r;
