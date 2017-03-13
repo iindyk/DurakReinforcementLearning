@@ -30,9 +30,9 @@ public class State {
 
     public static class StateAction{
         State state;
-        ArrayList<Card> action;
+        public ArrayList<Card> action;
         State nextState; //todo think how to use it
-        long gameID; //is not used now
+        long gameID;
 
         private StateAction(){}
 
@@ -42,10 +42,11 @@ public class State {
                     "state=" + state +
                     ", action=" + action +
                     ", nextState=" + nextState +
+                    ", gameID="+gameID+
                     "}\n";
         }
 
-        StateAction(State state, ArrayList<Card> action) {
+        private StateAction(State state, ArrayList<Card> action) {
             this.state = state;
             this.action = action;
         }

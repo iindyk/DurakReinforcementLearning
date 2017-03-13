@@ -54,7 +54,7 @@ public class Main {
             logger.addHandler(fileHandler);
             fileHandler.setFormatter(singleLineFormatter);
 
-            Level level=Level.OFF;
+            Level level=Level.WARNING;
             fileHandler.setLevel(level);
             logger.setLevel(level);
 
@@ -67,8 +67,13 @@ public class Main {
 
             RLFileReader reader=new RLFileReader();
             player0.addToHistory(reader.readStateActionsFromTxd("D:\\coding\\java\\DurakReinforcementLearning\\games.txd"));
-            player0.adjustValueFunctionsWithHistory();
-            player0.writeValueFunctionsToDB(player0.valueFunctions);
+            for (State.StateAction sa:
+                    player0.historyStateActions) {
+                if (sa.action.size()>1) System.out.println(sa);
+            }
+            System.out.println();
+            //player0.adjustValueFunctionsWithHistory();
+            //player0.writeValueFunctionsToDB(player0.valueFunctions);
 
             //read
 /*

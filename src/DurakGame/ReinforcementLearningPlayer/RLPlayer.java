@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 import static DurakGame.Conn.conn;
 import static DurakGame.Conn.resSet;
@@ -89,9 +90,12 @@ public class RLPlayer extends Player {
     public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException {
         System.out.println(currentState+"\n action "+action);
         if (currentState==null||action==null) return null;
-        if (!currentState.hand.containsAll(action)) throw new IncorrectActionException();
+        if (!currentState.hand.containsAll(action)) {
+            Game.logger.log(Level.WARNING,"problem is "+currentState+"action is"+action);
+            throw new IncorrectActionException();
+        }
         if (currentState.actionType== State.ActionType.DEFENCE && currentState.enemyAttack.isEmpty()) {
-            System.out.println("problem is "+currentState+"actions is"+action);
+            Game.logger.log(Level.WARNING,"problem is "+currentState+"action is"+action);
             throw new State.EmptyEnemyAttackException();
         }
 
@@ -215,7 +219,7 @@ public class RLPlayer extends Player {
     }
 
     public void addToHistory(State state,ArrayList<Card> action, float reward){//reward?
-        this.historyStateActions.add(new State.StateAction(state,action));
+        this.historyStateActions.add(new State.StateAction(state,action,0));
     }
 
     public void addToHistory(State.StateAction stateAction){

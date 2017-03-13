@@ -21,7 +21,7 @@ public class Game {
     public static ArrayList<Card> outOfTheGame=new ArrayList<>();
     public static Player attacker;
     public static Player defender;
-    static final Logger logger=Logger.getLogger(Game.class.getName());
+    public static final Logger logger=Logger.getLogger(Game.class.getName());
 
     public static HashMap<String,Integer> winnersTable=new HashMap<>();
 
