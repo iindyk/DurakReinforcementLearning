@@ -4,6 +4,7 @@ import DurakGame.ReinforcementLearningPlayer.*;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.logging.Formatter;
 import java.util.HashMap;
@@ -21,9 +22,9 @@ import static DurakGame.Game.logger;
  */
 public class Main {
     public static void main(String[] args){
-        //value functions adjustment test
+
         try{
-            Game.deck=Card.createDeck();
+/*          Game.deck=Card.createDeck();
             ArrayList<Card> enemyKnownCards=new ArrayList<>();
             //hand.add(new Card('6','d'));
             enemyKnownCards.add(new Card('7','s'));
@@ -40,32 +41,36 @@ public class Main {
             Game.deck.removeAll(action);
             Game.deck.removeAll(enemyKnownCards);
             ArrayList<Card> cardsOnTable=new ArrayList<>();
-            State state=new State(hand,new ArrayList<>(),enemyKnownCards,State.ActionType.ATTACK,
+            State state=new State(hand,new ArrayList<>(),new ArrayList<>(),State.ActionType.ATTACK,
                     new ArrayList<>(),cardsOnTable,0);
             state.hiddenCards=new HashSet<>(Game.deck);
             System.out.println(state);
             System.out.println(RLPlayer.nextStates(state,action));
+*/
 
-/*
+
             Handler fileHandler=new FileHandler("./logs/log.log");
             Formatter singleLineFormatter=new SingleLineFormatter();
             logger.addHandler(fileHandler);
             fileHandler.setFormatter(singleLineFormatter);
-            fileHandler.setLevel(Level.OFF);
-            logger.setLevel(Level.OFF);
+
+            Level level=Level.OFF;
+            fileHandler.setLevel(level);
+            logger.setLevel(level);
 
 
             RLPlayer player0=new RLPlayer();
-            SimpleAgentPlayer player1=new SimpleAgentPlayer();
+            Player player1=new SimpleAgentPlayer();
             Player[] players=new Player[]{player0,player1};
-*/
+
             //write
-/*
+
             RLFileReader reader=new RLFileReader();
             player0.addToHistory(reader.readStateActionsFromTxd("D:\\coding\\java\\DurakReinforcementLearning\\games.txd"));
-            player0.adjustValueFunctionsWithHistory();
-            player0.writeValueFunctionsToDB(player0.valueFunctions);
-*/
+            System.out.println(player0.historyStateActions);
+            //player0.adjustValueFunctionsWithHistory();
+            //player0.writeValueFunctionsToDB(player0.valueFunctions);
+
             //read
 /*
             player0.readValueFunctionsFromDB();
@@ -73,7 +78,7 @@ public class Main {
             for (int i = 0; i <10 ; i++) {
                 Game game=new Game(players);
             }
-            logger.log(Level.INFO,Game.getWinnersTable());
+            logger.log(Level.WARNING,Game.getWinnersTable());
 */
 /*            Player player0=new RandomAgentPlayer();
             Player player1=new SimpleAgentPlayer();
@@ -83,8 +88,10 @@ public class Main {
             System.out.println(getWinnersTable());
 */
         }
-        catch (Exception e){
+        catch (Throwable e){
             logger.log(Level.WARNING,"Exception occurred "+e.getMessage());
+            System.out.println(Game.players[1].state);
+            System.out.println(Game.deck);
             e.printStackTrace();
         }
     }

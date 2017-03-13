@@ -24,8 +24,8 @@ import static DurakGame.Conn.statmt;
  */
 public class RLPlayer extends Player {
     private static int count;
-    private ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
-    private ArrayList<StateValueFunction> valueFunctions=new ArrayList<>(State.NUMBER_OF_CLUSTERS);
+    public ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
+    public ArrayList<StateValueFunction> valueFunctions=new ArrayList<>(State.NUMBER_OF_CLUSTERS);
 
     public RLPlayer(){
         for (int i = 0; i <State.NUMBER_OF_CLUSTERS ; i++) {
@@ -86,10 +86,17 @@ public class RLPlayer extends Player {
         return 0;
     }
 
-    public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
+    public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException {
+        if (currentState==null||action==null) return null;
+        if (!currentState.hand.containsAll(action)) throw new IncorrectActionException();
+        if (currentState.actionType== State.ActionType.DEFENCE && currentState.enemyAttack.isEmpty()) {
+            System.out.println("problem is "+currentState+"actions is"+action);
+            throw new State.EmptyEnemyAttackException();
+        }
+
         State nextState=new State(currentState);
         nextState.hand.removeAll(action);
-        nextState.cardsOnTable.addAll(action);
+        if (!nextState.cardsOnTable.containsAll(action)) nextState.cardsOnTable.addAll(action);
 
         int sumVal =0;
         for (Card card: currentState.hiddenCards) sumVal +=card.valueIntWithTrump;
@@ -121,6 +128,7 @@ public class RLPlayer extends Player {
                     nextState.enemyKnownCards.removeAll(possibleDefence);
                     for (ArrayList<Card> possibleAdditionalAttack:
                          possibleAttacks(nextState.hand,nextState.cardsOnTable)) {
+                        if (r.size()>100) return r;
                         r.putAll(nextStates(nextState,possibleAdditionalAttack));
                     }
                 }
@@ -177,6 +185,8 @@ public class RLPlayer extends Player {
                     }
                     for (ArrayList<Card> possibleAdditionalDefence :
                             Player.possibleDefences(nextState.hand, possibleAdditionalAttack)) {
+                        //
+                        if (r.size()>100) return r;
                         r.putAll(nextStates(nextState, possibleAdditionalDefence));
                     }
                 }
@@ -199,8 +209,9 @@ public class RLPlayer extends Player {
         this.historyStateActions.addAll(stateActions);
     }
 
-    public void adjustValueFunctionsWithHistory() throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
+    public void adjustValueFunctionsWithHistory() throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException {
         valueFunctions.clear();
+        //to use the best value prediction
         ArrayList<State.StateAction> stateActions=new ArrayList<>();
         for (int i = 0; i <State.NUMBER_OF_CLUSTERS ; i++) {
             for (State.StateAction historyStateAction : historyStateActions) {
@@ -213,22 +224,12 @@ public class RLPlayer extends Player {
             double[] accumulatedCoef=new double[StateValueFunction.FEATURES_NUMBER];
             for (State.StateAction stateAction: stateActions) {
                 double[] lpCoef=new double[StateValueFunction.FEATURES_NUMBER];
-                State nextState=new State();
-                for (Map.Entry<State,Double> mentry:
-                        nextStates(stateAction.state,stateAction.action).entrySet()) {
-                    nextState=mentry.getKey();
-                }
-                //todo finish
-                ArrayList<ArrayList<Card>> possibleActions=possibleActions(state);
+                State nextState=StateValueFunction.getStateWithMaxReward(nextStates(stateAction.state,stateAction.action));
+                ArrayList<ArrayList<Card>> possibleActions=possibleActions(stateAction.state);
                 for (ArrayList<Card> possibleAction:
                      possibleActions) {
                     if (!(stateAction.action.containsAll(possibleAction)&&possibleAction.containsAll(stateAction.action))){
-                        State nextPossibleState=new State();
-                        for (Map.Entry<State,Double> mentry:
-                                nextStates(stateAction.state,possibleAction).entrySet()) {
-                            nextPossibleState=mentry.getKey();
-                        }
-                        //todo finish
+                        State nextPossibleState=StateValueFunction.getStateWithMaxReward(nextStates(stateAction.state,possibleAction));
                         for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++) {
                             lpCoef[j]+=(StateValueFunction.getBasisFunctionValue(j,nextPossibleState)-StateValueFunction.getBasisFunctionValue(j,nextState));
                         }
@@ -285,4 +286,6 @@ public class RLPlayer extends Player {
         conn.close();
         statmt.close();
     }
+
+    public static class IncorrectActionException extends Exception {}
 }

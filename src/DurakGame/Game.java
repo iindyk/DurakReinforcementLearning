@@ -19,6 +19,8 @@ public class Game {
     public static int roundNumber;
     public static ArrayList<Card> cardsOnTable=new ArrayList<>();
     public static ArrayList<Card> outOfTheGame=new ArrayList<>();
+    public static Player attacker;
+    public static Player defender;
     static final Logger logger=Logger.getLogger(Game.class.getName());
 
     public static HashMap<String,Integer> winnersTable=new HashMap<>();
@@ -39,7 +41,7 @@ public class Game {
     private Game(){}
 
     public Game(Player[] players) throws Card.TrumpIsNotDefinedException, EndlessGameException, Card.UnknownSuitException {
-        players=players;
+        Game.players=players;
         deck=Card.createDeck();
         for (Player player: players
              ) {
@@ -66,73 +68,79 @@ public class Game {
         //defining attacker
         Random random=new Random();
         int attackedID=random.nextInt(2);
-        Player attacker=players[attackedID];
-        attacker.state.actionType= State.ActionType.ATTACK;
-        logger.log(Level.INFO,"First attacker is "+attacker.name);
+        Game.attacker=players[attackedID];
+        Game.attacker.state.actionType= State.ActionType.ATTACK;
+        logger.log(Level.INFO,"First attacker is "+Game.attacker.name);
 
-        Player defender=players[1-attackedID];
-        defender.state.actionType= State.ActionType.DEFENCE;
-        logger.log(Level.INFO,"Defender is "+defender.name);
+        Game.defender=players[1-attackedID];
+        Game.defender.state.actionType= State.ActionType.DEFENCE;
+        logger.log(Level.INFO,"Defender is "+Game.defender.name);
+        logger.log(Level.INFO,Game.defender.name+" state is "+Game.defender.state);
+
 
         Player transitPlayer;
-        roundNumber=0;
+        Game.roundNumber=0;
         boolean newAttackerTakesFirst = false;
 
-        while (attacker.state.hand.size()!=0 && defender.state.hand.size()!=0 && roundNumber<1000) {
-            for (Player player: players) player.state.roundNumber=roundNumber;
-            logger.log(Level.INFO,"Round #"+roundNumber);
+        while (Game.attacker.state.hand.size()!=0 && Game.defender.state.hand.size()!=0 && Game.roundNumber<1000) {
+            for (Player player: players) player.state.roundNumber=Game.roundNumber;
+            logger.log(Level.INFO,"Round #"+Game.roundNumber);
             ArrayList<Card> attackCards;
             ArrayList<Card> defenceCards;
-            while (attacker.canAttack()&&!(attackCards=attacker.attack()).isEmpty()) {
+            while (Game.attacker.canAttack()&&!(attackCards=Game.attacker.attack()).isEmpty()) {
                 cardsOnTable.addAll(attackCards);
-                logger.log(Level.INFO,attacker.name+" attacks with "+attackCards+"; cards on the table "+cardsOnTable);
-                if (defender.canDefend(attackCards)&&!(defenceCards =defender.defend(attackCards)).isEmpty()) {
+                logger.log(Level.INFO,Game.attacker.name+" attacks with "+attackCards+"; cards on the table "+cardsOnTable);
+                if (Game.defender.canDefend(attackCards)&&!(defenceCards =Game.defender.defend(attackCards)).isEmpty()) {
                     cardsOnTable.addAll(defenceCards);
-                    attacker.state.hiddenCards.removeAll(defenceCards);
-                    attacker.state.enemyKnownCards.removeAll(defenceCards);
-                    logger.log(Level.INFO, defender.name+" defends with "+ defenceCards+"; cards on the table "+cardsOnTable);
-                    if (!attacker.canAttack()) {
-                        transitPlayer=attacker;
-                        attacker=defender;
-                        defender=transitPlayer;
-                        attacker.state.actionType= State.ActionType.ATTACK;
-                        defender.state.actionType= State.ActionType.DEFENCE;
+                    Game.attacker.state.hiddenCards.removeAll(defenceCards);
+                    Game.attacker.state.enemyKnownCards.removeAll(defenceCards);
+                    logger.log(Level.INFO, Game.defender.name+" defends with "+ defenceCards+"; cards on the table "+cardsOnTable);
+                    if (!Game.attacker.canAttack()) {
+                        transitPlayer=Game.attacker;
+                        Game.attacker=Game.defender;
+                        Game.defender=transitPlayer;
+                        Game.attacker.state.actionType= State.ActionType.ATTACK;
+                        Game.defender.state.actionType= State.ActionType.DEFENCE;
                         newAttackerTakesFirst=false;
                         break;
                     }
                 }
                 else {
-                    logger.log(Level.INFO,defender.name+" takes cards.");
-                    defender.takeCards(cardsOnTable);
-                    attacker.state.enemyKnownCards.addAll(cardsOnTable);
+                    logger.log(Level.INFO,Game.defender.name+" takes cards.");
+                    Game.defender.takeCards(cardsOnTable);
+                    Game.attacker.state.enemyKnownCards.addAll(cardsOnTable);
                     newAttackerTakesFirst=true;
                     break;
                 }
             }
             cardsOnTable.clear();
             if (newAttackerTakesFirst){
-                while (attacker.state.hand.size()<6&&deck.size()!=0) attacker.takeCardFromDeck();
-                while (defender.state.hand.size()<6&&deck.size()!=0) defender.takeCardFromDeck();
+                while (Game.attacker.state.hand.size()<6&&deck.size()!=0) Game.attacker.takeCardFromDeck();
+                while (Game.defender.state.hand.size()<6&&deck.size()!=0) Game.defender.takeCardFromDeck();
             }
             else {
-                while (defender.state.hand.size()<6&&deck.size()!=0) defender.takeCardFromDeck();
-                while (attacker.state.hand.size()<6&&deck.size()!=0) attacker.takeCardFromDeck();
+                while (Game.defender.state.hand.size()<6&&deck.size()!=0) Game.defender.takeCardFromDeck();
+                while (Game.attacker.state.hand.size()<6&&deck.size()!=0) Game.attacker.takeCardFromDeck();
             }
             if (deck.size()<2) {
-                attacker.state.enemyKnownCards=defender.state.hand;
-                defender.state.enemyKnownCards=attacker.state.hand;
+                Game.attacker.state.enemyKnownCards.clear();
+                Game.attacker.state.enemyKnownCards.addAll(Game.defender.state.hand);
+                Game.attacker.state.hiddenCards.clear();
+                Game.defender.state.enemyKnownCards.clear();
+                Game.defender.state.enemyKnownCards.addAll(Game.attacker.state.hand);
+                Game.defender.state.hiddenCards.clear();
             }
 
-            roundNumber++;
+            Game.roundNumber++;
         }
-        if (attacker.state.hand.size()==0) {
-            logger.log(Level.INFO,attacker.name+" wins!");
-            winnersTable.put(attacker.name,winnersTable.get(attacker.name)+1);
+        if (Game.attacker.state.hand.size()==0) {
+            logger.log(Level.INFO,Game.attacker.name+" wins!");
+            winnersTable.put(Game.attacker.name,winnersTable.get(Game.attacker.name)+1);
         }
-        else if (roundNumber==999) throw new EndlessGameException();
+        else if (Game.roundNumber==999) throw new EndlessGameException();
         else    {
-            logger.log(Level.INFO,defender.name+" wins!");
-            winnersTable.put(defender.name,winnersTable.get(defender.name)+1);
+            logger.log(Level.INFO,Game.defender.name+" wins!");
+            winnersTable.put(Game.defender.name,winnersTable.get(defender.name)+1);
         }
     }
 

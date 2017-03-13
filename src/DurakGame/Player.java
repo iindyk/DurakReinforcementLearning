@@ -2,7 +2,6 @@ package DurakGame;
 
 import DurakGame.ReinforcementLearningPlayer.State;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 

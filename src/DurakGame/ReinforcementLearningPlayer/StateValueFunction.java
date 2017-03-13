@@ -1,9 +1,12 @@
 package DurakGame.ReinforcementLearningPlayer;
 
 import DurakGame.Card;
+import DurakGame.Game;
+import DurakGame.Player;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -29,12 +32,13 @@ public class StateValueFunction {
         this.coefficients = coefficients;
     }
 
-    double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
-        State newState = new State();
-        for (Map.Entry<State,Double> mentry:
-             RLPlayer.nextStates(currentState, action).entrySet()) {
-            newState=mentry.getKey();
+    double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException {
+        HashMap<State,Double> hm=RLPlayer.nextStates(currentState, action);
+        if (hm.size()>100) {
+            System.out.println(currentState+"action"+action);
+            System.out.println(Game.deck);
         }
+        State newState = getStateWithMaxReward(hm);
         double result = 0;
         for (int i = 0; i < FEATURES_NUMBER; i++) {
             result += this.coefficients[i] * (getBasisFunctionValue(i, newState) - getBasisFunctionValue(i, currentState));
@@ -42,7 +46,7 @@ public class StateValueFunction {
         return result;
     }
 
-    public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException {
+    public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException {
         double result = 0;
         for (int i = 0; i < actionSequence.size(); i++)
             result += getRvalue(stateSequence.get(i), actionSequence.get(i)) * Math.pow(DISCOUNT_FACTOR, i);
@@ -60,5 +64,23 @@ public class StateValueFunction {
         } else if (i == 1) return -(double) state.hand.size() / 4;//normalization
             //else if (i==2) {                }
         else return -1;
+    }
+
+    static State getStateWithMaxReward(HashMap<State,Double> states){
+        State s=new State();
+        double maxDefaultReward=-2;
+        for (Map.Entry<State,Double> mentry:
+                states.entrySet()) {
+            State sp=mentry.getKey();
+            double r=0;
+            for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++) {
+                r+=StateValueFunction.getBasisFunctionValue(j,s);
+            }
+            if (r>maxDefaultReward){
+                maxDefaultReward=r;
+                s=sp;
+            }
+        }
+        return s;
     }
 }

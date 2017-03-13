@@ -12,10 +12,9 @@ import java.util.ArrayList;
 public class SimpleAgentPlayer extends Player {
     private static int count;
     public SimpleAgentPlayer(){
-        SimpleAgentPlayer.count++;
         this.name="SimpleAgent"+count;
         this.state=new State();
-        count++;
+        SimpleAgentPlayer.count++;
     }
 
     @Override

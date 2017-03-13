@@ -13,8 +13,8 @@ public class RandomAgentPlayer extends Player {
     private static int count;
     public RandomAgentPlayer(){
         super();
-        RandomAgentPlayer.count++;
         this.name="RandomAgent"+count;
+        RandomAgentPlayer.count++;
     }
 
     @Override
