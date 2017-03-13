@@ -43,7 +43,7 @@ public class RLFileReader  {
             InputStream is = new FileInputStream(path);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 
-            while ((line = reader.readLine()) != null && linesCount<1000) {
+            while ((line = reader.readLine()) != null /*&& linesCount<1000*/) {
                 if (line.substring(0,4).equals("game") && attacker==0){
                     gameId=Long.parseLong(line.substring(6,line.length()-1));
                     stateActions.addAll(stateActions0);

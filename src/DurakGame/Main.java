@@ -67,9 +67,8 @@ public class Main {
 
             RLFileReader reader=new RLFileReader();
             player0.addToHistory(reader.readStateActionsFromTxd("D:\\coding\\java\\DurakReinforcementLearning\\games.txd"));
-            System.out.println(player0.historyStateActions);
-            //player0.adjustValueFunctionsWithHistory();
-            //player0.writeValueFunctionsToDB(player0.valueFunctions);
+            player0.adjustValueFunctionsWithHistory();
+            player0.writeValueFunctionsToDB(player0.valueFunctions);
 
             //read
 /*
@@ -90,8 +89,8 @@ public class Main {
         }
         catch (Throwable e){
             logger.log(Level.WARNING,"Exception occurred "+e.getMessage());
-            System.out.println(Game.players[1].state);
-            System.out.println(Game.deck);
+            System.out.println();
+            System.out.println();
             e.printStackTrace();
         }
     }

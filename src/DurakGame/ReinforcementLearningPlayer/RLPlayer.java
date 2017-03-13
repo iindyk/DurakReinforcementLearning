@@ -86,7 +86,8 @@ public class RLPlayer extends Player {
         return 0;
     }
 
-    public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException {
+    public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException {
+        System.out.println(currentState+"\n action "+action);
         if (currentState==null||action==null) return null;
         if (!currentState.hand.containsAll(action)) throw new IncorrectActionException();
         if (currentState.actionType== State.ActionType.DEFENCE && currentState.enemyAttack.isEmpty()) {
@@ -106,7 +107,16 @@ public class RLPlayer extends Player {
         }
         HashMap<State,Double> r=new HashMap<>();
         if (currentState.actionType== State.ActionType.ATTACK){
-            if ((action.size()!=0 && (Player.canDefend(nextState.enemyKnownCards,action) || nextState.hiddenCards.size()>0))){
+            if (currentState.enemyKnownCards.isEmpty() && Player.possibleActions(nextState).isEmpty()){
+                State nextState1=new State(nextState);
+                nextState1.enemyKnownCards.addAll(action);
+                nextState1.cardsOnTable.clear();
+                r.put(nextState1,1d);
+                State nextState2=new State(nextState);
+                nextState2.cardsOnTable.add(new Card('j','j'));
+                r.put(nextState2,1d);
+            }
+            else if ((action.size()!=0 && (Player.canDefend(nextState.enemyKnownCards,action) || nextState.hiddenCards.size()>0))){
                 ArrayList<ArrayList<Card>> possibleDefences=possibleDefences(nextState.enemyKnownCards,action);
                 ArrayList<Card> hiddenDefence=new ArrayList<>();
                 for (Card card: action) hiddenDefence.add(new Card(24));
@@ -163,7 +173,14 @@ public class RLPlayer extends Player {
                 nextState.roundNumber++;
                 r.put(new State(nextState), 1d);
                 return r;
-            } else {
+            }
+            else if(nextState.enemyKnownCards.isEmpty()){
+                nextState.outOfTheGame.addAll(nextState.cardsOnTable);
+                nextState.cardsOnTable.clear();
+                nextState.enemyAttack.clear();
+                nextState.roundNumber++;
+            }
+            else {
                 for (ArrayList<Card> possibleAdditionalAttack :
                         Player.possibleAttacks(nextState.enemyKnownCards, nextState.cardsOnTable)) {
                     nextState.cardsOnTable = new ArrayList<>(currentState.cardsOnTable);
@@ -209,7 +226,7 @@ public class RLPlayer extends Player {
         this.historyStateActions.addAll(stateActions);
     }
 
-    public void adjustValueFunctionsWithHistory() throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException {
+    public void adjustValueFunctionsWithHistory() throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException {
         valueFunctions.clear();
         //to use the best value prediction
         ArrayList<State.StateAction> stateActions=new ArrayList<>();
@@ -223,6 +240,7 @@ public class RLPlayer extends Player {
             //LP
             double[] accumulatedCoef=new double[StateValueFunction.FEATURES_NUMBER];
             for (State.StateAction stateAction: stateActions) {
+                stateAction.state.cardsOnTable.removeAll(stateAction.action);//
                 double[] lpCoef=new double[StateValueFunction.FEATURES_NUMBER];
                 State nextState=StateValueFunction.getStateWithMaxReward(nextStates(stateAction.state,stateAction.action));
                 ArrayList<ArrayList<Card>> possibleActions=possibleActions(stateAction.state);

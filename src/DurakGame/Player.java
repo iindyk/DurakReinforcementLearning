@@ -139,13 +139,16 @@ public abstract class Player {
             ArrayList<Card> availableHand1 = new ArrayList<>();
             ArrayList<Card> availableHand2 = new ArrayList<>();
             ArrayList<Card> tmp = new ArrayList<>();
-            for (int i = 0; i < hand.size(); i++) {
+            ArrayList<Card> chand=new ArrayList<>(hand);
+        for (Card hc: hand) if (hc.suit=='\0' ||hc.suit=='j') chand.remove(hc);
+
+            for (int i = 0; i < chand.size(); i++) {
                 tmp.clear();
                 availableHand0.clear();
-                availableHand0.addAll(hand);
-                if (hand.get(i).beats(enemyAttack.get(0))) {
-                    tmp.add(hand.get(i));
-                    availableHand0.remove(hand.get(i));
+                availableHand0.addAll(chand);
+                if (chand.get(i).beats(enemyAttack.get(0))) {
+                    tmp.add(chand.get(i));
+                    availableHand0.remove(chand.get(i));
                     if (enemyAttack.size() > 1) {
                         availableHand1.clear();
                         availableHand1.addAll(availableHand0);
@@ -208,8 +211,8 @@ public abstract class Player {
     public static ArrayList<ArrayList<Card>> possibleAttacks(ArrayList<Card> hand, ArrayList<Card> cardsOnTable) throws Card.TrumpIsNotDefinedException {
         ArrayList<ArrayList<Card>> possibleActions=new ArrayList<>(new ArrayList<>());
             ArrayList<Card> tmp=new ArrayList<>();
-            ArrayList<Card> retainedHand=new ArrayList<>();
-            retainedHand.addAll(hand);
+            ArrayList<Card> retainedHand=new ArrayList<>(hand);
+        for (Card hc: hand) if (hc.suit=='\0' ||hc.suit=='j') retainedHand.remove(hc);
 
             int in=0;
             if (!(cardsOnTable.isEmpty())){

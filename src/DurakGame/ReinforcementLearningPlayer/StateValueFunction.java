@@ -32,7 +32,7 @@ public class StateValueFunction {
         this.coefficients = coefficients;
     }
 
-    double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException {
+    double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException {
         HashMap<State,Double> hm=RLPlayer.nextStates(currentState, action);
         if (hm.size()>100) {
             System.out.println(currentState+"action"+action);
@@ -46,7 +46,7 @@ public class StateValueFunction {
         return result;
     }
 
-    public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException {
+    public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException {
         double result = 0;
         for (int i = 0; i < actionSequence.size(); i++)
             result += getRvalue(stateSequence.get(i), actionSequence.get(i)) * Math.pow(DISCOUNT_FACTOR, i);
