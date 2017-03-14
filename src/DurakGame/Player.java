@@ -140,7 +140,7 @@ public abstract class Player {
             ArrayList<Card> availableHand2 = new ArrayList<>();
             ArrayList<Card> tmp = new ArrayList<>();
             ArrayList<Card> chand=new ArrayList<>(hand);
-        for (Card hc: hand) if (hc.suit=='\0' ||hc.suit=='j') chand.remove(hc);
+        for (Card hc: hand) if (hc.suit=='\0' ||hc.suit=='j'||hc.valueIntWithTrump==24) chand.remove(hc);
 
             for (int i = 0; i < chand.size(); i++) {
                 tmp.clear();
@@ -212,7 +212,7 @@ public abstract class Player {
         ArrayList<ArrayList<Card>> possibleActions=new ArrayList<>(new ArrayList<>());
             ArrayList<Card> tmp=new ArrayList<>();
             ArrayList<Card> retainedHand=new ArrayList<>(hand);
-        for (Card hc: hand) if (hc.suit=='\0' ||hc.suit=='j') retainedHand.remove(hc);
+        for (Card hc: hand) if (hc.suit=='\0' ||hc.suit=='j'||hc.valueIntWithTrump==24) retainedHand.remove(hc);
 
             int in=0;
             if (!(cardsOnTable.isEmpty())){

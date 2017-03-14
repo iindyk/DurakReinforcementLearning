@@ -80,9 +80,7 @@ public class Game {
         while (Game.attacker.state.hand.size()!=0 && Game.defender.state.hand.size()!=0 && Game.roundNumber<1000) {
             for (Player player: players) player.state.roundNumber=Game.roundNumber;
             logger.log(Level.INFO,"Round #"+Game.roundNumber);
-            //
-            logger.log(Level.INFO,players[0].name+"state is "+players[0].state);
-            //
+            logger.log(Level.INFO,"RLP state is "+players[0].state);
             ArrayList<Card> attackCards;
             ArrayList<Card> defenceCards;
             while (Game.attacker.canAttack()&&!(attackCards=Game.attacker.attack()).isEmpty()) {
@@ -93,7 +91,7 @@ public class Game {
                     Game.attacker.state.hiddenCards.removeAll(defenceCards);
                     Game.attacker.state.enemyKnownCards.removeAll(defenceCards);
                     logger.log(Level.INFO, Game.defender.name+" defends with "+ defenceCards+"; cards on the table "+cardsOnTable);
-                    if (!Game.attacker.canAttack()) {
+                    if (!Game.attacker.canAttack()||(Game.attacker.attack()).isEmpty() ) {
                         transitPlayer=Game.attacker;
                         Game.attacker=Game.defender;
                         Game.defender=transitPlayer;

@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+
+import static DurakGame.Game.logger;
 
 /**
  * Created by HP on 04.02.2017.
@@ -33,11 +36,9 @@ public class StateValueFunction {
     }
 
     double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException {
+        RLPlayer.recursionDepth=0;
         HashMap<State,Double> hm=RLPlayer.nextStates(currentState, action);
-        if (hm.size()>100) {
-            System.out.println(currentState+"action"+action);
-            System.out.println(Game.deck);
-        }
+        logger.log(Level.FINEST,"----State is----"+currentState+"\n---action is---"+action);
         State newState = getStateWithMaxReward(hm);
         double result = 0;
         for (int i = 0; i < FEATURES_NUMBER; i++) {
@@ -60,15 +61,17 @@ public class StateValueFunction {
                     state.hand) {
                 sum += card.valueIntWithTrump;
             }
-            return ((double) sum / state.hand.size()) / 17;//normalization
-        } else if (i == 1) return -(double) state.hand.size() / 4;//normalization
+            if (sum==0) return 1;
+            else return ((double) (sum / state.hand.size())-6) / 17;//normalization
+        } else if (i == 1) return -(double) state.hand.size() / 6;//normalization
             //else if (i==2) {                }
         else return -1;
     }
 
     public static State getStateWithMaxReward(HashMap<State,Double> states){
         State s=new State();
-        double maxDefaultReward=-200;
+        double maxDefaultReward=-10000;
+        states.remove(s);
         for (Map.Entry<State,Double> mentry:
                 states.entrySet()) {
             State sp=mentry.getKey();
@@ -76,11 +79,13 @@ public class StateValueFunction {
             for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++) {
                 r+=StateValueFunction.getBasisFunctionValue(j,sp);
             }
+            logger.log(Level.FINEST,"Next possible state "+sp+"\n basic reward of the state is "+r);
             if (r>maxDefaultReward){
                 maxDefaultReward=r;
                 s=sp;
             }
         }
+        logger.log(Level.FINEST,"Maxreward state is "+s);
         return s;
     }
 }

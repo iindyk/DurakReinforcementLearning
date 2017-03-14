@@ -25,7 +25,8 @@ public class State {
 
     public enum ActionType{
         ATTACK,
-        DEFENCE
+        DEFENCE,
+        UNDEFINED
     }
 
     public static class StateAction{
@@ -58,7 +59,15 @@ public class State {
         }
     }
 
-    public State(){}
+    public State(){
+        this.actionType=ActionType.UNDEFINED;
+        hand=new ArrayList<>();
+        outOfTheGame=new HashSet<>();
+        enemyKnownCards=new ArrayList<>();
+        hiddenCards=new HashSet<>();
+        cardsOnTable=new ArrayList<>();
+        enemyAttack=new ArrayList<>();
+    }
 
     public State(ArrayList<Card> hand, HashSet<Card> outOfTheGame, ArrayList<Card> enemyKnownCards, ActionType actionType,
           ArrayList<Card> enemyAttack, ArrayList<Card> cardsOnTable, int roundNumber) throws EmptyEnemyAttackException, UndefinedActionException{

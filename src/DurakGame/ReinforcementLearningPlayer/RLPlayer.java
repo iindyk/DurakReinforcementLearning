@@ -10,8 +10,10 @@ import scpsolver.lpsolver.LinearProgramSolver;
 import scpsolver.lpsolver.SolverFactory;
 import scpsolver.problems.LinearProgram;
 
+import java.sql.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -19,6 +21,7 @@ import java.util.logging.Level;
 import static DurakGame.Conn.conn;
 import static DurakGame.Conn.resSet;
 import static DurakGame.Conn.statmt;
+import static DurakGame.Game.logger;
 
 /**
  * Created by HP on 04.02.2017.
@@ -27,6 +30,7 @@ public class RLPlayer extends Player {
     private static int count;
     public static ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
     public ArrayList<StateValueFunction> valueFunctions=new ArrayList<>(State.NUMBER_OF_CLUSTERS);
+    public static int recursionDepth=100;
 
     public RLPlayer(){
         for (int i = 0; i <State.NUMBER_OF_CLUSTERS ; i++) {
@@ -41,6 +45,7 @@ public class RLPlayer extends Player {
     @Override
     public ArrayList<Card> attack() throws Card.TrumpIsNotDefinedException {
         ArrayList<ArrayList<Card>> possibleActions=possibleActions(this.state);
+        logger.log(Level.FINEST,"Possible actions are "+possibleActions);
         ArrayList<Card> attack=possibleActions.get(0);
         try {
             double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,attack);
@@ -88,13 +93,15 @@ public class RLPlayer extends Player {
     }
 
     public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException {
+        recursionDepth++;
+        if (recursionDepth>100) return new HashMap<>();
         if (currentState==null||action==null) return null;
         if (!currentState.hand.containsAll(action)) {
             for (State.StateAction sa:
                  historyStateActions) {
                 if (sa.state.equals(currentState)) System.out.println(sa.gameID);
             }
-            Game.logger.log(Level.WARNING,"problem is "+currentState+"action is"+action);
+            logger.log(Level.WARNING,"problem is "+currentState+"action is"+action);
             throw new IncorrectActionException();
         }
         if (currentState.actionType== State.ActionType.DEFENCE && currentState.enemyAttack.isEmpty()) {
@@ -102,11 +109,10 @@ public class RLPlayer extends Player {
                     historyStateActions) {
                 if (sa.state.equals(currentState)) System.out.println(sa.gameID);
             }
-            Game.logger.log(Level.WARNING,"problem is "+currentState+"action is"+action);
+            logger.log(Level.WARNING,"problem is "+currentState+"action is"+action);
             throw new State.EmptyEnemyAttackException();
         }
 
-        //System.out.println(currentState+"\n action is "+action);
 
         State nextState=new State(currentState);
         nextState.hand.removeAll(action);
@@ -116,7 +122,7 @@ public class RLPlayer extends Player {
         for (Card card: currentState.hiddenCards) sumVal +=card.valueIntWithTrump;
         Card avgHiddenCard=new Card(currentState.hiddenCards.isEmpty()? 0:sumVal /currentState.hiddenCards.size());
         if (sumVal !=0) {
-            for (int j = 0; j <action.size() && Game.deck.size()<=j; j++) nextState.hand.add(avgHiddenCard);
+            for (int j = 0; nextState.hand.size()<6 && Game.deck.size()>=j; j++) nextState.hand.add(avgHiddenCard);
         }
         HashMap<State,Double> r=new HashMap<>();
         if (currentState.actionType== State.ActionType.ATTACK){
@@ -224,6 +230,8 @@ public class RLPlayer extends Player {
                     for (ArrayList<Card> possibleAdditionalDefence :
                             Player.possibleDefences(nextState.hand, possibleAdditionalAttack)) {
                         //
+                        if (r.size()>20) return r;
+                        //
                         r.putAll(nextStates(nextState, possibleAdditionalDefence));
                     }
                 }
@@ -273,6 +281,7 @@ public class RLPlayer extends Player {
                         }
                     }
                 }
+                System.out.println("coeffs are "+Arrays.toString(lpCoef));
                 LinearProgram lp = new LinearProgram(lpCoef);
 
                 double[] eqcon=new double[StateValueFunction.FEATURES_NUMBER];

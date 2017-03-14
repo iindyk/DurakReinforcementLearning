@@ -53,12 +53,12 @@ public class Main {
 
             Handler fileHandler=new FileHandler("./logs/log.log");
             Formatter singleLineFormatter=new SingleLineFormatter();
-            logger.addHandler(fileHandler);
-            fileHandler.setFormatter(singleLineFormatter);
 
-            Level level=Level.INFO;
+            Level level=Level.FINEST;
             fileHandler.setLevel(level);
             logger.setLevel(level);
+            logger.addHandler(fileHandler);
+            fileHandler.setFormatter(singleLineFormatter);
 
 
             RLPlayer player0=new RLPlayer();
@@ -66,7 +66,7 @@ public class Main {
             Player[] players=new Player[]{player0,player1};
 
             //write
-/*
+
             RLFileReader reader=new RLFileReader();
             player0.addToHistory(reader.readStateActionsFromTxd("D:\\coding\\java\\DurakReinforcementLearning\\games.txd"));
             for (State.StateAction sa:
@@ -75,16 +75,16 @@ public class Main {
             }
             player0.adjustValueFunctionsWithHistory();
             player0.writeValueFunctionsToDB(player0.valueFunctions);
-*/
-            //read
 
+            //read
+/*
             player0.readValueFunctionsFromDB();
             Game.setWinnersTable(players);
             for (int i = 0; i <10 ; i++) {
                 new Game(players);
             }
             logger.log(Level.WARNING,Game.getWinnersTable());
-
+*/
 /*            Player player0=new RandomAgentPlayer();
             Player player1=new SimpleAgentPlayer();
             Player[] players=new Player[]{player0,player1};
@@ -94,7 +94,7 @@ public class Main {
 */
         }
         catch (Throwable e){
-            logger.log(Level.WARNING,"Exception occurred "+e.getMessage());
+            logger.log(Level.WARNING,"Exception occurred "+e);
             System.out.println();
             System.out.println();
             e.printStackTrace();
