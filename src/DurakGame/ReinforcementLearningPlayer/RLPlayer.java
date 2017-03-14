@@ -30,7 +30,7 @@ public class RLPlayer extends Player {
     private static int count;
     public static ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
     public ArrayList<StateValueFunction> valueFunctions=new ArrayList<>(State.NUMBER_OF_CLUSTERS);
-    public static int recursionDepth=100;
+    public static int recursionDepth=0;
 
     public RLPlayer(){
         for (int i = 0; i <State.NUMBER_OF_CLUSTERS ; i++) {
@@ -136,7 +136,7 @@ public class RLPlayer extends Player {
                     r.put(nextState1,1d);
                     State nextState2=new State(nextState);
                     for (int i = 0; i <action.size()+additionalAttack.size() ; i++) {
-                        nextState2.cardsOnTable.add(new Card('j','j'));
+                        nextState2.cardsOnTable.add(new Card(24));
                     }
                     nextState2.outOfTheGame.addAll(nextState2.cardsOnTable);
                     nextState2.cardsOnTable.clear();
@@ -254,7 +254,7 @@ public class RLPlayer extends Player {
         this.historyStateActions.addAll(stateActions);
     }
 
-    public void adjustValueFunctionsWithHistory() throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException {
+    public void adjustValueFunctionsWithHistory() throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException, StateValueFunction.UndefinedFeatureException {
         valueFunctions.clear();
         //to use the best value prediction
         ArrayList<State.StateAction> stateActions=new ArrayList<>();
@@ -281,7 +281,6 @@ public class RLPlayer extends Player {
                         }
                     }
                 }
-                System.out.println("coeffs are "+Arrays.toString(lpCoef));
                 LinearProgram lp = new LinearProgram(lpCoef);
 
                 double[] eqcon=new double[StateValueFunction.FEATURES_NUMBER];

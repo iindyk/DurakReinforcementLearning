@@ -111,22 +111,22 @@ public class State {
 
         if (roundNumber != state.roundNumber) return false;
         if (!hand.equals(state.hand)) return false;
-        if (outOfTheGame != null ? !outOfTheGame.equals(state.outOfTheGame) : state.outOfTheGame != null) return false;
-        if (enemyKnownCards != null ? !enemyKnownCards.equals(state.enemyKnownCards) : state.enemyKnownCards != null)
-            return false;
-        if (!hiddenCards.equals(state.hiddenCards)) return false;
-        if (cardsOnTable != null ? !cardsOnTable.equals(state.cardsOnTable) : state.cardsOnTable != null) return false;
+        //if (outOfTheGame != null ? !outOfTheGame.equals(state.outOfTheGame) : state.outOfTheGame != null) return false;
+        //if (enemyKnownCards != null ? !enemyKnownCards.equals(state.enemyKnownCards) : state.enemyKnownCards != null)
+          //  return false;
+        //if (!hiddenCards.equals(state.hiddenCards)) return false;
+        //if (cardsOnTable != null ? !cardsOnTable.equals(state.cardsOnTable) : state.cardsOnTable != null) return false;
         return (enemyAttack != null ? enemyAttack.equals(state.enemyAttack) : state.enemyAttack == null) && actionType == state.actionType;
     }
 
     @Override
     public int hashCode() {
         int result = hand.hashCode();
-        result = 31 * result + (outOfTheGame != null ? outOfTheGame.hashCode() : 0);
-        result = 31 * result + (enemyKnownCards != null ? enemyKnownCards.hashCode() : 0);
-        result = 31 * result + hiddenCards.hashCode();
-        result = 31 * result + (cardsOnTable != null ? cardsOnTable.hashCode() : 0);
-        result = 31 * result + (enemyAttack != null ? enemyAttack.hashCode() : 0);
+        //result = 31 * result + (outOfTheGame != null ? outOfTheGame.hashCode() : 0);
+        //result = 31 * result + (enemyKnownCards != null ? enemyKnownCards.hashCode() : 0);
+        //result = 31 * result + hiddenCards.hashCode();
+        //result = 31 * result + (cardsOnTable != null ? cardsOnTable.hashCode() : 0);
+        //result = 31 * result + (enemyAttack != null ? enemyAttack.hashCode() : 0);
         result = 31 * result + actionType.hashCode();
         result = 31 * result + roundNumber;
         return result;

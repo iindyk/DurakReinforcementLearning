@@ -35,7 +35,7 @@ public class StateValueFunction {
         this.coefficients = coefficients;
     }
 
-    double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException {
+    double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException {
         RLPlayer.recursionDepth=0;
         HashMap<State,Double> hm=RLPlayer.nextStates(currentState, action);
         logger.log(Level.FINEST,"----State is----"+currentState+"\n---action is---"+action);
@@ -47,14 +47,14 @@ public class StateValueFunction {
         return result;
     }
 
-    public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException {
+    public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException {
         double result = 0;
         for (int i = 0; i < actionSequence.size(); i++)
             result += getRvalue(stateSequence.get(i), actionSequence.get(i)) * Math.pow(DISCOUNT_FACTOR, i);
         return result;
     }
 
-    static double getBasisFunctionValue(int i, State state) {
+    static double getBasisFunctionValue(int i, State state) throws UndefinedFeatureException {
         if (i == 0) {
             int sum = 0;
             for (Card card :
@@ -62,13 +62,15 @@ public class StateValueFunction {
                 sum += card.valueIntWithTrump;
             }
             if (sum==0) return 1;
-            else return ((double) (sum / state.hand.size())-6) / 17;//normalization
+            else return ( ((double)sum / state.hand.size())-6) / 17;//normalization
         } else if (i == 1) return -(double) state.hand.size() / 6;//normalization
             //else if (i==2) {                }
-        else return -1;
+        else throw new UndefinedFeatureException();
     }
 
-    public static State getStateWithMaxReward(HashMap<State,Double> states){
+    public static State getStateWithMaxReward(HashMap<State,Double> states) throws UndefinedFeatureException {
+        //Cleans HashMap after defining maxreward state!!!
+        RLPlayer.recursionDepth=0;
         State s=new State();
         double maxDefaultReward=-10000;
         states.remove(s);
@@ -85,7 +87,9 @@ public class StateValueFunction {
                 s=sp;
             }
         }
+        states.clear();
         logger.log(Level.FINEST,"Maxreward state is "+s);
         return s;
     }
+    public static class UndefinedFeatureException extends Exception {}
 }

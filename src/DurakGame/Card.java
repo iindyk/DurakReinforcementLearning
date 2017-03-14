@@ -50,6 +50,8 @@ public class Card {
                     break;
             }
         }
+        if (Game.getTrumpCard()!=null && Game.getTrumpCard().suit==suit) this.valueIntWithTrump=this.valueInt+9;
+        else this.valueIntWithTrump=this.valueInt;
     }
 
     public Card(String cardString) {

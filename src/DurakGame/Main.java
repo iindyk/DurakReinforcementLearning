@@ -26,29 +26,33 @@ public class Main {
         try{
 /*          Game.deck=Card.createDeck();
             ArrayList<Card> enemyKnownCards=new ArrayList<>();
+            Game.setTrumpCard(new Card('a','s'));
             //hand.add(new Card('6','d'));
             enemyKnownCards.add(new Card('7','s'));
             enemyKnownCards.add(new Card('7','d'));
-            Game.setTrumpCard(new Card('a','s'));
+            enemyKnownCards.add(new Card('a','c'));
             ArrayList<Card> action=new ArrayList<>();
             ArrayList<Card> hand=new ArrayList<>();
             hand.add(new Card('6','c'));
             hand.add(new Card('a','h'));
             hand.add(new Card('7','c'));
             hand.add(new Card('6','s'));
+            hand.add(new Card('a','s'));
             action.add(hand.get(0));
             Game.deck.removeAll(hand);
             Game.deck.removeAll(action);
             Game.deck.removeAll(enemyKnownCards);
             ArrayList<Card> cardsOnTable=new ArrayList<>();
-            State state=new State(hand,new ArrayList<>(),new ArrayList<>(),State.ActionType.ATTACK,
+            State state=new State(hand,new HashSet<>(),enemyKnownCards,State.ActionType.ATTACK,
                     new ArrayList<>(),cardsOnTable,0);
             state.hiddenCards=new HashSet<>(Game.deck);
-            System.out.println(state);
+            System.out.println(state+"\n action is "+action);
             HashMap<State,Double> hms=RLPlayer.nextStates(state,action);
-            System.out.println(hms);
             System.out.println();
-            System.out.println(StateValueFunction.getStateWithMaxReward(hms));
+            System.out.println(hms.size());
+            System.out.println();
+            System.out.println("maxreward state is "+StateValueFunction.getStateWithMaxReward(hms));
+            System.out.println(hms.size());
 */
 
             Handler fileHandler=new FileHandler("./logs/log.log");
@@ -66,32 +70,25 @@ public class Main {
             Player[] players=new Player[]{player0,player1};
 
             //write
-
+/*
             RLFileReader reader=new RLFileReader();
             player0.addToHistory(reader.readStateActionsFromTxd("D:\\coding\\java\\DurakReinforcementLearning\\games.txd"));
             for (State.StateAction sa:
-                    player0.historyStateActions) {
+                    RLPlayer.historyStateActions) {
                 if (sa.action.size()>1) System.out.println(sa);
             }
             player0.adjustValueFunctionsWithHistory();
             player0.writeValueFunctionsToDB(player0.valueFunctions);
-
+*/
             //read
-/*
+
             player0.readValueFunctionsFromDB();
             Game.setWinnersTable(players);
-            for (int i = 0; i <10 ; i++) {
+            for (int i = 0; i <100 ; i++) {
                 new Game(players);
             }
             logger.log(Level.WARNING,Game.getWinnersTable());
-*/
-/*            Player player0=new RandomAgentPlayer();
-            Player player1=new SimpleAgentPlayer();
-            Player[] players=new Player[]{player0,player1};
-            Game.setWinnersTable(players);
-            Game game=new Game(players);
-            System.out.println(getWinnersTable());
-*/
+
         }
         catch (Throwable e){
             logger.log(Level.WARNING,"Exception occurred "+e);
