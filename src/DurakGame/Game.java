@@ -19,6 +19,7 @@ public class Game {
     public static Player attacker;
     public static Player defender;
     public static final Logger logger=Logger.getLogger(Game.class.getName());
+    public static final int CARDS_IN_HAND=6;
 
     public static HashMap<String,Integer> winnersTable=new HashMap<>();
 
@@ -48,7 +49,7 @@ public class Game {
             player.state.outOfTheGame=outOfTheGame;
             player.state.enemyKnownCards.clear();
             player.state.enemyAttack.clear();
-            for (int i = 0; i <6 ; i++) {
+            for (int i = 0; i <CARDS_IN_HAND ; i++) {
                 player.takeCardFromDeck();
             }
             logger.log(Level.INFO,player.name+"'s hand is "+player.state.hand);
@@ -75,49 +76,47 @@ public class Game {
 
         Player transitPlayer;
         Game.roundNumber=0;
-        boolean newAttackerTakesFirst = false;
+        boolean defenderTakesCards;
 
         while (Game.attacker.state.hand.size()!=0 && Game.defender.state.hand.size()!=0 && Game.roundNumber<1000) {
             for (Player player: players) player.state.roundNumber=Game.roundNumber;
             logger.log(Level.INFO,"Round #"+Game.roundNumber);
-            logger.log(Level.INFO,"RLP state is "+players[0].state);
-            ArrayList<Card> attackCards;
+            logger.log(Level.INFO,players[0].name+" state is "+players[0].state);
+            logger.log(Level.INFO,players[1].name+" state is "+players[1].state);
+            ArrayList<Card> attackCards=new ArrayList<>();
             ArrayList<Card> defenceCards;
+            defenderTakesCards=false;
             while (Game.attacker.canAttack()&&!(attackCards=Game.attacker.attack()).isEmpty()) {
                 cardsOnTable.addAll(attackCards);
                 logger.log(Level.INFO,Game.attacker.name+" attacks with "+attackCards+"; cards on the table "+cardsOnTable);
-                if (Game.defender.canDefend(attackCards)&&!(defenceCards =Game.defender.defend(attackCards)).isEmpty()) {
+                if (Game.defender.canDefend(attackCards)&&!(defenceCards =Game.defender.defend(attackCards)).isEmpty() && !defenderTakesCards) {
                     cardsOnTable.addAll(defenceCards);
                     Game.attacker.state.hiddenCards.removeAll(defenceCards);
                     Game.attacker.state.enemyKnownCards.removeAll(defenceCards);
                     logger.log(Level.INFO, Game.defender.name+" defends with "+ defenceCards+"; cards on the table "+cardsOnTable);
-                    if (!Game.attacker.canAttack()||(Game.attacker.attack()).isEmpty() ) {
-                        transitPlayer=Game.attacker;
-                        Game.attacker=Game.defender;
-                        Game.defender=transitPlayer;
-                        Game.attacker.state.actionType= State.ActionType.ATTACK;
-                        Game.defender.state.actionType= State.ActionType.DEFENCE;
-                        newAttackerTakesFirst=false;
-                        break;
-                    }
+                    defenderTakesCards=false;
+
                 }
-                else {
-                    logger.log(Level.INFO,Game.defender.name+" takes cards.");
-                    Game.defender.takeCards(cardsOnTable);
-                    Game.attacker.state.enemyKnownCards.addAll(cardsOnTable);
-                    newAttackerTakesFirst=true;
-                    break;
-                }
+                else defenderTakesCards=true;
             }
-            cardsOnTable.clear();
-            if (newAttackerTakesFirst){
-                while (Game.attacker.state.hand.size()<6&&deck.size()!=0) Game.attacker.takeCardFromDeck();
-                while (Game.defender.state.hand.size()<6&&deck.size()!=0) Game.defender.takeCardFromDeck();
+            //
+            if (!defenderTakesCards) {
+                transitPlayer=Game.attacker;
+                Game.attacker=Game.defender;
+                Game.defender=transitPlayer;
+                Game.attacker.state.actionType= State.ActionType.ATTACK;
+                Game.defender.state.actionType= State.ActionType.DEFENCE;
             }
             else {
-                while (Game.defender.state.hand.size()<6&&deck.size()!=0) Game.defender.takeCardFromDeck();
-                while (Game.attacker.state.hand.size()<6&&deck.size()!=0) Game.attacker.takeCardFromDeck();
+                logger.log(Level.INFO,Game.defender.name+" takes cards.");
+                Game.defender.takeCards(cardsOnTable);
+                Game.attacker.state.enemyKnownCards.addAll(cardsOnTable);
             }
+            //
+            cardsOnTable.clear();
+            while (Game.defender.state.hand.size()<CARDS_IN_HAND&&deck.size()!=0) Game.defender.takeCardFromDeck();
+            while (Game.attacker.state.hand.size()<CARDS_IN_HAND&&deck.size()!=0) Game.attacker.takeCardFromDeck();
+
             if (deck.size()<2) {
                 Game.attacker.state.enemyKnownCards.clear();
                 Game.attacker.state.enemyKnownCards.addAll(Game.defender.state.hand);

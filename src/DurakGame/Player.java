@@ -50,6 +50,7 @@ public abstract class Player {
     }
 
     public boolean canDefend(ArrayList<Card> attack) throws Card.TrumpIsNotDefinedException {
+        if (attack.isEmpty()) return true;
         this.state.enemyKnownCards.removeAll(attack);
         this.state.hiddenCards.removeAll(attack);
         this.state.enemyAttack.clear();

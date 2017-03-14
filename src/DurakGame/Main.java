@@ -58,7 +58,7 @@ public class Main {
             Handler fileHandler=new FileHandler("./logs/log.log");
             Formatter singleLineFormatter=new SingleLineFormatter();
 
-            Level level=Level.FINEST;
+            Level level=Level.INFO;
             fileHandler.setLevel(level);
             logger.setLevel(level);
             logger.addHandler(fileHandler);
