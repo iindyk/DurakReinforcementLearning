@@ -92,23 +92,23 @@ public class RLPlayer extends Player {
         return 0;
     }
 
-    public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException {
+    public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException, StateValueFunction.UndefinedFeatureException {
         recursionDepth++;
         if (recursionDepth>100) return new HashMap<>();
-        if (currentState==null||action==null) return null;
+        if (currentState==null||action==null) return new HashMap<>();
         if (!currentState.hand.containsAll(action)) {
-            for (State.StateAction sa:
+            /*for (State.StateAction sa:
                  historyStateActions) {
                 if (sa.state.equals(currentState)) System.out.println(sa.gameID);
-            }
+            }*/
             logger.log(Level.WARNING,"problem is "+currentState+"action is"+action);
             throw new IncorrectActionException();
         }
         if (currentState.actionType== State.ActionType.DEFENCE && currentState.enemyAttack.isEmpty()) {
-            for (State.StateAction sa:
+            /*for (State.StateAction sa:
                     historyStateActions) {
                 if (sa.state.equals(currentState)) System.out.println(sa.gameID);
-            }
+            }*/
             logger.log(Level.WARNING,"problem is "+currentState+"action is"+action);
             throw new State.EmptyEnemyAttackException();
         }
@@ -164,10 +164,21 @@ public class RLPlayer extends Player {
                     nextState.cardsOnTable.addAll(possibleDefence);
                     nextState.enemyKnownCards=new ArrayList<>(currentState.enemyKnownCards);
                     nextState.enemyKnownCards.removeAll(possibleDefence);
+                    //
+                    ArrayList<ArrayList<Card>> possibleAdditionalAttacks=possibleAttacks(nextState.hand,nextState.cardsOnTable);
+                    double min=1000;
+                    double max=-1000;
                     for (ArrayList<Card> possibleAdditionalAttack:
-                         possibleAttacks(nextState.hand,nextState.cardsOnTable)) {
-                        r.putAll(nextStates(nextState,possibleAdditionalAttack));
+                         possibleAdditionalAttacks) {
+                        double rv=StateValueFunction.getSimpleRvalue(nextState,possibleAdditionalAttack);
+                        if (rv>max) max=rv;
+                        if (rv<min) min=rv;
                     }
+                    for (ArrayList<Card> possibleAdditionalAttack:
+                            possibleAdditionalAttacks) {
+                        if (StateValueFunction.getSimpleRvalue(nextState,possibleAdditionalAttack)>=(max+min)/2) r.putAll(nextStates(nextState,possibleAdditionalAttack));
+                    }
+                    //
                 }
             }
             else {
@@ -228,13 +239,21 @@ public class RLPlayer extends Player {
                         r.put(nextState1,1d);
                         continue;
                     }
-                    for (ArrayList<Card> possibleAdditionalDefence :
-                            Player.possibleDefences(nextState.hand, possibleAdditionalAttack)) {
-                        //
-                        if (r.size()>20) return r;
-                        //
-                        r.putAll(nextStates(nextState, possibleAdditionalDefence));
+                    //
+                    ArrayList<ArrayList<Card>> possibleAdditionalDefences=possibleDefences(nextState.hand,possibleAdditionalAttack);
+                    double min=1000;
+                    double max=-1000;
+                    for (ArrayList<Card> possibleAdditionalDefence:
+                            possibleAdditionalDefences) {
+                        double rv=StateValueFunction.getSimpleRvalue(nextState,possibleAdditionalDefence);
+                        if (rv>max) max=rv;
+                        if (rv<min) min=rv;
                     }
+                    for (ArrayList<Card> possibleAdditionalDefence :
+                            possibleAdditionalDefences) {
+                        if (StateValueFunction.getSimpleRvalue(nextState,possibleAdditionalDefence)>=(max+min)/2) r.putAll(nextStates(nextState, possibleAdditionalDefence));
+                    }
+                    //
                 }
             }
         }

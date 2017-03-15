@@ -37,11 +37,11 @@ public class StateValueFunction {
 
     double getRvalue(State currentState, ArrayList<Card> action, State.ActionType actionType) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException {
         RLPlayer.recursionDepth=0;
+        logger.log(Level.FINEST,"----State is----"+currentState+"\n---action is---"+action+'\n');
         HashMap<State,Double> hm=RLPlayer.nextStates(currentState, action);
         State newState;
         if (actionType== State.ActionType.ATTACK) newState = getStateWithMaxReward(hm);
         else newState=getStateWithMinReward(hm);
-        logger.log(Level.FINEST,"----State is----"+currentState+"\n---action is---"+action);
         double result = 0;
         for (int i = 0; i < FEATURES_NUMBER; i++) {
             result += this.coefficients[i] * (getBasisFunctionValue(i, newState) - getBasisFunctionValue(i, currentState));
@@ -70,7 +70,39 @@ public class StateValueFunction {
         else throw new UndefinedFeatureException();
     }
 
-    public static State getStateWithMaxReward(HashMap<State,Double> states) throws UndefinedFeatureException {
+    private static double getBasicRvalueOfState(State s) throws UndefinedFeatureException {
+        double r=0;
+        for (int i = 0; i <FEATURES_NUMBER ; i++) {
+            r+=getBasisFunctionValue(i,s);
+        }
+        return r;
+    }
+
+    public static double getSimpleRvalue(State state,ArrayList<Card> action) throws RLPlayer.IncorrectActionException, State.EmptyEnemyAttackException, UndefinedFeatureException {
+        if (state==null||action==null) return 0;
+        if (!state.hand.containsAll(action)) {
+            logger.log(Level.WARNING,"problem is "+state+"action is"+action);
+            throw new RLPlayer.IncorrectActionException();
+        }
+        if (state.actionType== State.ActionType.DEFENCE && state.enemyAttack.isEmpty()) {
+            logger.log(Level.WARNING,"problem is "+state+"action is"+action);
+            throw new State.EmptyEnemyAttackException();
+        }
+
+        State nextState=new State(state);
+        nextState.hand.removeAll(action);
+        nextState.cardsOnTable.clear();
+
+        int sumVal =0;
+        for (Card card: state.hiddenCards) sumVal +=card.valueIntWithTrump;
+        Card avgHiddenCard=new Card(state.hiddenCards.isEmpty()? 0:sumVal /state.hiddenCards.size());
+        if (sumVal !=0) {
+            for (int j = 0; nextState.hand.size()<Game.CARDS_IN_HAND && Game.deck.size()>0; j++) nextState.hand.add(avgHiddenCard);
+        }
+        return (getBasicRvalueOfState(nextState)-getBasicRvalueOfState(state));
+    }
+
+    public static State getStateWithMaxReward(HashMap<State, Double> states) throws UndefinedFeatureException {
         //Cleans HashMap after defining maxreward state!!!
         RLPlayer.recursionDepth=0;
         State s=new State();
@@ -79,23 +111,20 @@ public class StateValueFunction {
         for (Map.Entry<State,Double> mentry:
                 states.entrySet()) {
             State sp=mentry.getKey();
-            double r=0;
-            for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++) {
-                r+=StateValueFunction.getBasisFunctionValue(j,sp);
-            }
-            logger.log(Level.FINEST,"Next possible state "+sp+"\n basic reward of the state is "+r);
+            double r=getBasicRvalueOfState(sp);
+            logger.log(Level.FINEST,"Next possible state "+sp+"\n basic reward of the state is "+r+'\n');
             if (r>maxDefaultReward){
                 maxDefaultReward=r;
                 s=sp;
             }
         }
         states.clear();
-        logger.log(Level.FINEST,"Maxreward state is "+s);
+        logger.log(Level.FINEST,"Maxreward state is "+s+'\n');
         return s;
     }
 
-    public static State getStateWithMinReward(HashMap<State,Double> states) throws UndefinedFeatureException{
-        //Cleans HashMap after defining maxreward state!!!
+    public static State getStateWithMinReward(HashMap<State, Double> states) throws UndefinedFeatureException{
+        //Cleans HashMap after defining minreward state!!!
         RLPlayer.recursionDepth=0;
         State s=new State();
         double minDefaultReward=10000;
@@ -103,18 +132,15 @@ public class StateValueFunction {
         for (Map.Entry<State,Double> mentry:
                 states.entrySet()) {
             State sp=mentry.getKey();
-            double r=0;
-            for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++) {
-                r+=StateValueFunction.getBasisFunctionValue(j,sp);
-            }
-            logger.log(Level.FINEST,"Next possible state "+sp+"\n basic reward of the state is "+r);
+            double r=getBasicRvalueOfState(sp);
+            logger.log(Level.FINEST,"Next possible state "+sp+"\n basic reward of the state is "+r+'\n');
             if (r<minDefaultReward){
                 minDefaultReward=r;
                 s=sp;
             }
         }
         states.clear();
-        logger.log(Level.FINEST,"Minreward state is "+s);
+        logger.log(Level.FINEST,"Minreward state is "+s+'\n');
         return s;
     }
 

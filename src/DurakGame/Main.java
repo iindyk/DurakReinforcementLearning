@@ -102,8 +102,6 @@ public class Main {
         }
         catch (Throwable e){
             logger.log(Level.WARNING,"Exception occurred "+e);
-            System.out.println();
-            System.out.println();
             e.printStackTrace();
         }
     }
