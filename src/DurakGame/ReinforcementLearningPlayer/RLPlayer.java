@@ -48,10 +48,10 @@ public class RLPlayer extends Player {
         logger.log(Level.FINEST,"Possible actions are "+possibleActions);
         ArrayList<Card> attack=possibleActions.get(0);
         try {
-            double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,attack);
+            double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,attack, State.ActionType.ATTACK);
             for (ArrayList<Card> possibleAttack:
                  possibleActions) {
-                double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleAttack);
+                double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleAttack, State.ActionType.ATTACK);
                 if (maxReward<possibleReward){
                     maxReward=possibleReward;
                     attack=possibleAttack;
@@ -70,10 +70,10 @@ public class RLPlayer extends Player {
         ArrayList<ArrayList<Card>> possibleActions=possibleActions(this.state);
         ArrayList<Card> defence=possibleActions.get(0);
         try {
-            double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,defence);
+            double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,defence, State.ActionType.DEFENCE);
             for (ArrayList<Card> possibleDefence:
                     possibleActions) {
-                double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleDefence);
+                double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleDefence, State.ActionType.DEFENCE);
                 if (maxReward<possibleReward){
                     maxReward=possibleReward;
                     defence=possibleDefence;
@@ -192,6 +192,7 @@ public class RLPlayer extends Player {
         else {
             if (action.size() == 0) {
                 //recursion base case
+                while(nextState.hand.remove(avgHiddenCard)) { }
                 nextState.hand.addAll(nextState.cardsOnTable);
                 nextState.hiddenCards.removeAll(nextState.cardsOnTable);
                 nextState.cardsOnTable.clear();

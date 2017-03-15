@@ -27,31 +27,41 @@ public class Main {
 /*          Game.deck=Card.createDeck();
             ArrayList<Card> enemyKnownCards=new ArrayList<>();
             Game.setTrumpCard(new Card('a','s'));
-            //hand.add(new Card('6','d'));
-            enemyKnownCards.add(new Card('7','s'));
-            enemyKnownCards.add(new Card('7','d'));
-            enemyKnownCards.add(new Card('a','c'));
-            ArrayList<Card> action=new ArrayList<>();
             ArrayList<Card> hand=new ArrayList<>();
-            hand.add(new Card('6','c'));
-            hand.add(new Card('a','h'));
-            hand.add(new Card('7','c'));
-            hand.add(new Card('6','s'));
-            hand.add(new Card('a','s'));
-            action.add(hand.get(0));
+            hand.add(new Card('7','s'));
+            hand.add(new Card('7','d'));
+            hand.add(new Card('a','c'));
+            hand.add(new Card('8','c'));
+
+
+            enemyKnownCards.add(new Card('6','c'));
+            enemyKnownCards.add(new Card('a','h'));
+            enemyKnownCards.add(new Card('7','c'));
+            enemyKnownCards.add(new Card('6','s'));
+            enemyKnownCards.add(new Card('a','s'));
+            ArrayList<Card> enemyAttack=new ArrayList<>();
+            enemyAttack.add(enemyKnownCards.get(0));
+            enemyKnownCards.remove(0);
             Game.deck.removeAll(hand);
-            Game.deck.removeAll(action);
+            Game.deck.removeAll(enemyAttack);
             Game.deck.removeAll(enemyKnownCards);
+            hand.add(Game.deck.get(Game.deck.size()-1));
+            Game.deck.remove(Game.deck.size()-1);
+            hand.add(Game.deck.get(Game.deck.size()-1));
+            Game.deck.remove(Game.deck.size()-1);
+            ArrayList<Card> action=new ArrayList<>();
+            action.add(hand.get(0));
             ArrayList<Card> cardsOnTable=new ArrayList<>();
-            State state=new State(hand,new HashSet<>(),enemyKnownCards,State.ActionType.ATTACK,
-                    new ArrayList<>(),cardsOnTable,0);
+            cardsOnTable.addAll(enemyAttack);
+            State state=new State(hand,new HashSet<>(),enemyKnownCards,State.ActionType.DEFENCE,
+                    enemyAttack,cardsOnTable,0);
             state.hiddenCards=new HashSet<>(Game.deck);
             System.out.println(state+"\n action is "+action);
             HashMap<State,Double> hms=RLPlayer.nextStates(state,action);
             System.out.println();
             System.out.println(hms.size());
             System.out.println();
-            System.out.println("maxreward state is "+StateValueFunction.getStateWithMaxReward(hms));
+            System.out.println("maxreward state is "+StateValueFunction.getStateWithMinReward(hms));
             System.out.println(hms.size());
 */
 

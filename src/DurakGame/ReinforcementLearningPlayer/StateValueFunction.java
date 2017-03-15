@@ -35,11 +35,13 @@ public class StateValueFunction {
         this.coefficients = coefficients;
     }
 
-    double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException {
+    double getRvalue(State currentState, ArrayList<Card> action, State.ActionType actionType) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException {
         RLPlayer.recursionDepth=0;
         HashMap<State,Double> hm=RLPlayer.nextStates(currentState, action);
+        State newState;
+        if (actionType== State.ActionType.ATTACK) newState = getStateWithMaxReward(hm);
+        else newState=getStateWithMinReward(hm);
         logger.log(Level.FINEST,"----State is----"+currentState+"\n---action is---"+action);
-        State newState = getStateWithMaxReward(hm);
         double result = 0;
         for (int i = 0; i < FEATURES_NUMBER; i++) {
             result += this.coefficients[i] * (getBasisFunctionValue(i, newState) - getBasisFunctionValue(i, currentState));
@@ -50,7 +52,7 @@ public class StateValueFunction {
     public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException {
         double result = 0;
         for (int i = 0; i < actionSequence.size(); i++)
-            result += getRvalue(stateSequence.get(i), actionSequence.get(i)) * Math.pow(DISCOUNT_FACTOR, i);
+            result += getRvalue(stateSequence.get(i), actionSequence.get(i), State.ActionType.ATTACK) * Math.pow(DISCOUNT_FACTOR, i);
         return result;
     }
 
@@ -91,5 +93,30 @@ public class StateValueFunction {
         logger.log(Level.FINEST,"Maxreward state is "+s);
         return s;
     }
-    public static class UndefinedFeatureException extends Exception {}
+
+    public static State getStateWithMinReward(HashMap<State,Double> states) throws UndefinedFeatureException{
+        //Cleans HashMap after defining maxreward state!!!
+        RLPlayer.recursionDepth=0;
+        State s=new State();
+        double minDefaultReward=10000;
+        states.remove(s);
+        for (Map.Entry<State,Double> mentry:
+                states.entrySet()) {
+            State sp=mentry.getKey();
+            double r=0;
+            for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++) {
+                r+=StateValueFunction.getBasisFunctionValue(j,sp);
+            }
+            logger.log(Level.FINEST,"Next possible state "+sp+"\n basic reward of the state is "+r);
+            if (r<minDefaultReward){
+                minDefaultReward=r;
+                s=sp;
+            }
+        }
+        states.clear();
+        logger.log(Level.FINEST,"Minreward state is "+s);
+        return s;
+    }
+
+    static class UndefinedFeatureException extends Exception {}
 }
