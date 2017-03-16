@@ -48,10 +48,10 @@ public class RLPlayer extends Player {
         logger.log(Level.FINEST,"Possible actions are "+possibleActions);
         ArrayList<Card> attack=possibleActions.get(0);
         try {
-            double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,attack, State.ActionType.ATTACK);
+            double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,attack);
             for (ArrayList<Card> possibleAttack:
                  possibleActions) {
-                double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleAttack, State.ActionType.ATTACK);
+                double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleAttack);
                 if (maxReward<possibleReward){
                     maxReward=possibleReward;
                     attack=possibleAttack;
@@ -70,10 +70,10 @@ public class RLPlayer extends Player {
         ArrayList<ArrayList<Card>> possibleActions=possibleActions(this.state);
         ArrayList<Card> defence=possibleActions.get(0);
         try {
-            double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,defence, State.ActionType.DEFENCE);
+            double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,defence);
             for (ArrayList<Card> possibleDefence:
                     possibleActions) {
-                double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleDefence, State.ActionType.DEFENCE);
+                double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleDefence);
                 if (maxReward<possibleReward){
                     maxReward=possibleReward;
                     defence=possibleDefence;
@@ -94,7 +94,10 @@ public class RLPlayer extends Player {
 
     public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException, StateValueFunction.UndefinedFeatureException {
         recursionDepth++;
-        if (recursionDepth>100) return new HashMap<>();
+        if (recursionDepth>100) {
+            logger.log(Level.WARNING, "Recursion depth is to high!!! State is "+currentState+"\n action is "+action);
+            return new HashMap<>();
+        }
         if (currentState==null||action==null) return new HashMap<>();
         if (!currentState.hand.containsAll(action)) {
             /*for (State.StateAction sa:
@@ -274,7 +277,7 @@ public class RLPlayer extends Player {
         this.historyStateActions.addAll(stateActions);
     }
 
-    public void adjustValueFunctionsWithHistory() throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException, StateValueFunction.UndefinedFeatureException {
+    public void adjustValueFunctionsWithHistory() throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException, StateValueFunction.UndefinedFeatureException, StateValueFunction.EmptyStateException {
         valueFunctions.clear();
         //to use the best value prediction
         ArrayList<State.StateAction> stateActions=new ArrayList<>();

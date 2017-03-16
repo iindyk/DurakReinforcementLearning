@@ -83,7 +83,7 @@ public class Game {
             logger.log(Level.INFO,"Round #"+Game.roundNumber);
             logger.log(Level.INFO,players[0].name+" state is "+players[0].state);
             logger.log(Level.INFO,players[1].name+" state is "+players[1].state);
-            ArrayList<Card> attackCards=new ArrayList<>();
+            ArrayList<Card> attackCards;
             ArrayList<Card> defenceCards;
             defenderTakesCards=false;
             while (Game.attacker.canAttack()&&!(attackCards=Game.attacker.attack()).isEmpty()) {

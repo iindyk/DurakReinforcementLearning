@@ -68,7 +68,7 @@ public class Main {
             Handler fileHandler=new FileHandler("./logs/log.log");
             Formatter singleLineFormatter=new SingleLineFormatter();
 
-            Level level=Level.INFO;
+            Level level=Level.FINEST;
             fileHandler.setLevel(level);
             logger.setLevel(level);
             logger.addHandler(fileHandler);
@@ -94,7 +94,7 @@ public class Main {
 
             player0.readValueFunctionsFromDB();
             Game.setWinnersTable(players);
-            for (int i = 0; i <100 ; i++) {
+            for (int i = 0; i <1 ; i++) {
                 new Game(players);
             }
             logger.log(Level.WARNING,Game.getWinnersTable());

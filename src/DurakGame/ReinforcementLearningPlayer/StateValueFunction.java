@@ -35,12 +35,13 @@ public class StateValueFunction {
         this.coefficients = coefficients;
     }
 
-    double getRvalue(State currentState, ArrayList<Card> action, State.ActionType actionType) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException {
+    double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException, EmptyStateException {
         RLPlayer.recursionDepth=0;
         logger.log(Level.FINEST,"----State is----"+currentState+"\n---action is---"+action+'\n');
         HashMap<State,Double> hm=RLPlayer.nextStates(currentState, action);
+        if (hm.isEmpty()) logger.log(Level.WARNING, "Empty possible states set; state is  "+currentState+"\n action is "+action);
         State newState;
-        if (actionType== State.ActionType.ATTACK) newState = getStateWithMaxReward(hm);
+        if (currentState.actionType== State.ActionType.ATTACK) newState = getStateWithMaxReward(hm);
         else newState=getStateWithMinReward(hm);
         double result = 0;
         for (int i = 0; i < FEATURES_NUMBER; i++) {
@@ -49,10 +50,10 @@ public class StateValueFunction {
         return result;
     }
 
-    public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException {
+    public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException, EmptyStateException {
         double result = 0;
         for (int i = 0; i < actionSequence.size(); i++)
-            result += getRvalue(stateSequence.get(i), actionSequence.get(i), State.ActionType.ATTACK) * Math.pow(DISCOUNT_FACTOR, i);
+            result += getRvalue(stateSequence.get(i), actionSequence.get(i)) * Math.pow(DISCOUNT_FACTOR, i);
         return result;
     }
 
@@ -102,7 +103,7 @@ public class StateValueFunction {
         return (getBasicRvalueOfState(nextState)-getBasicRvalueOfState(state));
     }
 
-    public static State getStateWithMaxReward(HashMap<State, Double> states) throws UndefinedFeatureException {
+    public static State getStateWithMaxReward(HashMap<State, Double> states) throws UndefinedFeatureException, EmptyStateException {
         //Cleans HashMap after defining maxreward state!!!
         RLPlayer.recursionDepth=0;
         State s=new State();
@@ -118,12 +119,13 @@ public class StateValueFunction {
                 s=sp;
             }
         }
+        if (s.actionType== State.ActionType.UNDEFINED) throw new EmptyStateException();
         states.clear();
         logger.log(Level.FINEST,"Maxreward state is "+s+'\n');
         return s;
     }
 
-    public static State getStateWithMinReward(HashMap<State, Double> states) throws UndefinedFeatureException{
+    public static State getStateWithMinReward(HashMap<State, Double> states) throws UndefinedFeatureException, EmptyStateException {
         //Cleans HashMap after defining minreward state!!!
         RLPlayer.recursionDepth=0;
         State s=new State();
@@ -139,10 +141,16 @@ public class StateValueFunction {
                 s=sp;
             }
         }
+        if (s.actionType== State.ActionType.UNDEFINED) {
+            logger.log(Level.WARNING,"states are "+states);
+            throw new EmptyStateException();
+        }
         states.clear();
         logger.log(Level.FINEST,"Minreward state is "+s+'\n');
         return s;
     }
 
     static class UndefinedFeatureException extends Exception {}
+
+    static class EmptyStateException extends Exception {}
 }
