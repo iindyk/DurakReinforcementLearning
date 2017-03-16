@@ -48,7 +48,7 @@ public class Game {
             player.state.cardsOnTable=cardsOnTable;
             player.state.outOfTheGame=outOfTheGame;
             player.state.enemyKnownCards.clear();
-            player.state.enemyAttack.clear();
+            player.state.enemyAttack=null;
             for (int i = 0; i <CARDS_IN_HAND ; i++) {
                 player.takeCardFromDeck();
             }
@@ -83,17 +83,17 @@ public class Game {
             logger.log(Level.INFO,"Round #"+Game.roundNumber);
             logger.log(Level.INFO,players[0].name+" state is "+players[0].state);
             logger.log(Level.INFO,players[1].name+" state is "+players[1].state);
-            ArrayList<Card> attackCards;
-            ArrayList<Card> defenceCards;
+            Card attackCard;
+            Card defenceCard;
             defenderTakesCards=false;
-            while (Game.attacker.canAttack()&&!(attackCards=Game.attacker.attack()).isEmpty()) {
-                cardsOnTable.addAll(attackCards);
-                logger.log(Level.INFO,Game.attacker.name+" attacks with "+attackCards+"; cards on the table "+cardsOnTable);
-                if (Game.defender.canDefend(attackCards)&&!(defenceCards =Game.defender.defend(attackCards)).isEmpty() && !defenderTakesCards) {
-                    cardsOnTable.addAll(defenceCards);
-                    Game.attacker.state.hiddenCards.removeAll(defenceCards);
-                    Game.attacker.state.enemyKnownCards.removeAll(defenceCards);
-                    logger.log(Level.INFO, Game.defender.name+" defends with "+ defenceCards+"; cards on the table "+cardsOnTable);
+            while (Game.attacker.canAttack()&&(attackCard=Game.attacker.attack())!=null) {
+                cardsOnTable.add(attackCard);
+                logger.log(Level.INFO,Game.attacker.name+" attacks with "+attackCard+"; cards on the table "+cardsOnTable);
+                if (Game.defender.canDefend(attackCard)&&(defenceCard =Game.defender.defend(attackCard))!=null && !defenderTakesCards) {
+                    cardsOnTable.add(defenceCard);
+                    Game.attacker.state.hiddenCards.remove(defenceCard);
+                    Game.attacker.state.enemyKnownCards.remove(defenceCard);
+                    logger.log(Level.INFO, Game.defender.name+" defends with "+ defenceCard+"; cards on the table "+cardsOnTable);
                     defenderTakesCards=false;
 
                 }

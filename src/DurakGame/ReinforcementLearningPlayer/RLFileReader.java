@@ -21,10 +21,10 @@ public class RLFileReader  {
         long gameId=0;
         String prevLine="     ";
         String line;
-        ArrayList<Card> attack0=new ArrayList<>();
-        ArrayList<Card> attack1=new ArrayList<>();
-        ArrayList<Card> defence0=new ArrayList<>();
-        ArrayList<Card> defence1=new ArrayList<>();
+        Card attack0=null;
+        Card attack1=null;
+        Card defence0=null;
+        Card defence1=null;
         
         ArrayList<State.StateAction> stateActions0=new ArrayList<>();
         ArrayList<State.StateAction> stateActions1=new ArrayList<>();
@@ -57,7 +57,7 @@ public class RLFileReader  {
                         player.state.cardsOnTable=Game.cardsOnTable;
                         player.state.outOfTheGame=Game.outOfTheGame;
                         player.state.enemyKnownCards.clear();
-                        player.state.enemyAttack.clear();
+                        player.state.enemyAttack=null;
                         player.state.roundNumber=Game.roundNumber;
                     }
                 }
@@ -74,7 +74,7 @@ public class RLFileReader  {
                         player.state.cardsOnTable=Game.cardsOnTable;
                         player.state.outOfTheGame=Game.outOfTheGame;
                         player.state.enemyKnownCards.clear();
-                        player.state.enemyAttack.clear();
+                        player.state.enemyAttack=null;
                         player.state.roundNumber=Game.roundNumber;
                     }
                 }
@@ -101,10 +101,10 @@ public class RLFileReader  {
                 }
                 else if (line.substring(0,4).equals("vskr")) {
                     Game.setTrumpCard(new Card(line.substring(10,12)));
-                    attack0.clear();
-                    attack1.clear();
-                    defence0.clear();
-                    defence1.clear();
+                    attack0=null;
+                    attack1=null;
+                    defence0=null;
+                    defence1=null;
                     Game.outOfTheGame.clear();
                 }
                 else if (((line.charAt(2)!='+'&& prevLine.charAt(2)=='+')||prevLine.substring(0,3).equals("tru") )&& line.charAt(0)=='0') {
@@ -112,18 +112,18 @@ public class RLFileReader  {
                     player0.state.actionType= State.ActionType.ATTACK;
                     player1.state.actionType= State.ActionType.DEFENCE;
                     Card newCard=new Card(line.substring(2,4));
-                    attack0.add(newCard);
+                    attack0=newCard;
                     Game.cardsOnTable.add(newCard);
-                    stateActions0.add(new State.StateAction(new State(player0.state),new ArrayList<>(attack0),gameId));
+                    stateActions0.add(new State.StateAction(new State(player0.state),attack0,gameId));
                 }
                 else if (((line.charAt(2)!='+'&& prevLine.charAt(2)=='+')||prevLine.substring(0,3).equals("tru") ) && line.charAt(0)=='1') {
                     attacker=1;
                     player1.state.actionType= State.ActionType.ATTACK;
                     player0.state.actionType= State.ActionType.DEFENCE;
                     Card newCard=new Card(line.substring(2,4));
-                    attack1.add(newCard);
+                    attack1=newCard;
                     Game.cardsOnTable.add(newCard);
-                    stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(attack1),gameId));
+                    stateActions1.add(new State.StateAction(new State(player1.state),attack1,gameId));
 
                 }
                 else if (line.substring(2,4).equals("hv") && line.charAt(0)=='0'){
@@ -131,23 +131,22 @@ public class RLFileReader  {
                         //stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(),gameId));
                         player1.state.hand.addAll(Game.cardsOnTable);
                         Game.cardsOnTable.clear();
-                        attack0.clear();
+                        attack0=null;
                     }
                     else {
                         //write attack & hand for 0 & change hand for 0 & set attack0=null
-                        player0.state.hiddenCards.removeAll(defence1);
+                        player0.state.hiddenCards.remove(defence1);
                         //stateActions0.add(new State.StateAction(new State(player0.state),new ArrayList<>(attack0)));
-                        player1.state.enemyAttack.clear();
-                        player1.state.enemyAttack.addAll(attack0);
+                        player1.state.enemyAttack=attack0;
                         //write defence & hand for 1 & change hand for 1 & set defence1=null
-                        player1.state.hiddenCards.removeAll(attack0);
-                        stateActions1.add(new State.StateAction(new State(player1.state), new ArrayList<>(defence1), gameId));
-                        player0.state.hand.removeAll(attack0);
-                        player1.state.hand.removeAll(defence1);
-                        Game.outOfTheGame.addAll(defence1);
-                        Game.outOfTheGame.addAll(attack0);
-                        attack0.clear();
-                        defence1.clear();
+                        player1.state.hiddenCards.remove(attack0);
+                        stateActions1.add(new State.StateAction(new State(player1.state), defence1, gameId));
+                        player0.state.hand.remove(attack0);
+                        player1.state.hand.remove(defence1);
+                        Game.outOfTheGame.add(defence1);
+                        Game.outOfTheGame.add(attack0);
+                        attack0=null;
+                        defence1=null;
                         Game.cardsOnTable.clear();
                         Game.roundNumber++;
                         player0.state.roundNumber = Game.roundNumber;
@@ -155,7 +154,7 @@ public class RLFileReader  {
                         if (!(prevLine.substring(2, 4).equals("be") || prevLine.charAt(0) == '0')) {
                             attacker = 1;
                             player1.state.actionType = State.ActionType.ATTACK;
-                            player1.state.enemyAttack.clear();
+                            player1.state.enemyAttack=null;
                             player0.state.actionType = State.ActionType.DEFENCE;
                         }
                     }
@@ -165,23 +164,22 @@ public class RLFileReader  {
                         //stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(),gameId));
                         player0.state.hand.addAll(Game.cardsOnTable);
                         Game.cardsOnTable.clear();
-                        attack1.clear();
+                        attack1=null;
                     }
                     else {
                         //write attack & hand for 1 & change hand for 1 & set attack1=null
-                        player1.state.hiddenCards.removeAll(defence0);
+                        player1.state.hiddenCards.remove(defence0);
                         //stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(attack1)));
-                        player0.state.enemyAttack.clear();
-                        player0.state.enemyAttack.addAll(attack1);
+                        player0.state.enemyAttack=attack1;
                         //write defence & hand for 0 & change hand for 0 & set attack0=null
-                        player0.state.hiddenCards.removeAll(attack1);
-                        stateActions0.add(new State.StateAction(new State(player0.state),new ArrayList<>(defence0),gameId));
-                        player1.state.hand.removeAll(attack1);
-                        player0.state.hand.removeAll(defence0);
-                        Game.outOfTheGame.addAll(defence0);
-                        Game.outOfTheGame.addAll(attack1);
-                        attack1.clear();
-                        defence0.clear();
+                        player0.state.hiddenCards.remove(attack1);
+                        stateActions0.add(new State.StateAction(new State(player0.state),defence0,gameId));
+                        player1.state.hand.remove(attack1);
+                        player0.state.hand.remove(defence0);
+                        Game.outOfTheGame.add(defence0);
+                        Game.outOfTheGame.add(attack1);
+                        attack1=null;
+                        defence0=null;
                         Game.cardsOnTable.clear();
                         Game.roundNumber++;
                         player0.state.roundNumber=Game.roundNumber;
@@ -189,64 +187,58 @@ public class RLFileReader  {
                         if (!(prevLine.substring(2,4).equals("be")|| prevLine.charAt(0)=='1')) {
                             attacker=0;
                             player0.state.actionType= State.ActionType.ATTACK;
-                            player0.state.enemyAttack.clear();
+                            player0.state.enemyAttack=null;
                             player1.state.actionType= State.ActionType.DEFENCE;
                         }
                     }
                 }
                 else if ((prevLine.length()==4||prevLine.substring(2,4).equals("be") ||prevLine.substring(2,4).equals("hv"))&& line.charAt(0)=='0' && attacker==0 && line.length()==4){
                     //write attack & hand for 0 & change hand for 0 & set attack0=null & .add(line.substring(2,3))
-                    player0.state.hiddenCards.removeAll(defence1);
+                    player0.state.hiddenCards.remove(defence1);
                     Card newCard=new Card(line.substring(2,4));
                     Game.cardsOnTable.add(newCard);
-                    attack0.clear();
-                    attack0.add(newCard);
-                    if (!defence1.isEmpty()) Game.cardsOnTable.add(defence1.get(defence1.size()-1));
-                    stateActions0.add(new State.StateAction(new State(player0.state),new ArrayList<>(attack0),gameId));
-                    player0.state.hand.removeAll(attack0);
+                    attack0=newCard;
+                    if (defence1!=null) Game.cardsOnTable.add(defence1);
+                    stateActions0.add(new State.StateAction(new State(player0.state),attack0,gameId));
+                    player0.state.hand.remove(attack0);
                 }
                 else if ((prevLine.length()==4||prevLine.substring(2,4).equals("be") ||prevLine.substring(2,4).equals("hv"))&& line.charAt(0)=='1' && attacker==1 && line.length()==4){
                     //write attack & hand for 1 & change hand for 1 & set attack1=null & .add(line.substring(2,3))
-                    player1.state.hiddenCards.removeAll(defence0);
+                    player1.state.hiddenCards.remove(defence0);
                     Card newCard=new Card(line.substring(2,4));
                     Game.cardsOnTable.add(newCard);
-                    attack1.clear();
-                    attack1.add(newCard);
-                    if (!defence0.isEmpty()) Game.cardsOnTable.add(defence0.get(defence0.size()-1));
-                    stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(attack1),gameId));
-                    player1.state.hand.removeAll(attack1);
+                    attack1=newCard;
+                    if (defence0!=null) Game.cardsOnTable.add(defence0);
+                    stateActions1.add(new State.StateAction(new State(player1.state),attack1,gameId));
+                    player1.state.hand.remove(attack1);
                         //Game.outOfTheGame.addAll(attack1);
 
                         //
                 }
                 else if (line.substring(2,4).equals("be")&& line.charAt(0)=='0') {
-                    if (!defence0.isEmpty() && attack1.isEmpty()){
-                        player0.state.enemyAttack.clear();
-                        player0.state.enemyAttack.addAll(stateActions1.get(stateActions1.size()-1).action);
-                        stateActions0.add(new State.StateAction(new State(player0.state),new ArrayList<>(defence0),gameId));
+                    if (defence0!=null && attack1==null){
+                        player0.state.enemyAttack=stateActions1.get(stateActions1.size()-1).action;
+                        stateActions0.add(new State.StateAction(new State(player0.state),defence0,gameId));
                     }
-                    else if(!attack1.isEmpty()){
-                        player0.state.enemyAttack.clear();
-                        player0.state.enemyAttack.addAll(attack1);
-                        player0.state.hiddenCards.removeAll(attack1);
-                        stateActions0.add(new State.StateAction(new State(player0.state),new ArrayList<>(defence0),gameId));
+                    else if(attack1!=null){
+                        player0.state.enemyAttack=attack1;
+                        player0.state.hiddenCards.remove(attack1);
+                        stateActions0.add(new State.StateAction(new State(player0.state),defence0,gameId));
                     }
-                    defence0.clear();
+                    defence0=null;
                     player0.state.hand.addAll(Game.cardsOnTable);
                 }
                 else if (line.substring(2,4).equals("be")&& line.charAt(0)=='1') {
-                    if (!defence1.isEmpty() && attack0.isEmpty()){
-                        player1.state.enemyAttack.clear();
-                        player1.state.enemyAttack.addAll(stateActions0.get(stateActions0.size()-1).action);
-                        stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(defence1),gameId));
+                    if (defence1!=null && attack0==null){
+                        player1.state.enemyAttack=stateActions0.get(stateActions0.size()-1).action;
+                        stateActions1.add(new State.StateAction(new State(player1.state),defence1,gameId));
                     }
-                    else if(!attack0.isEmpty()){
-                        player1.state.enemyAttack.clear();
-                        player1.state.enemyAttack.addAll(attack0);
-                        player0.state.hiddenCards.removeAll(attack0);
-                        stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(defence1),gameId));
+                    else if(attack0!=null){
+                        player1.state.enemyAttack=attack0;
+                        player0.state.hiddenCards.remove(attack0);
+                        stateActions1.add(new State.StateAction(new State(player1.state),defence1,gameId));
                     }
-                    defence1.clear();
+                    defence1=null;
                     player1.state.hand.addAll(Game.cardsOnTable);
                 }
                 else if (line.charAt(2)=='+'&& line.charAt(0)=='0'){
@@ -268,26 +260,24 @@ public class RLFileReader  {
                     }
                 }
                 else if (prevLine.length()==4 && line.length()==4 && line.charAt(0)=='0' && attacker==1){
-                    player0.state.enemyAttack.clear();
-                    player0.state.enemyAttack.addAll(stateActions1.get(stateActions1.size()-1).action);
-                    player0.state.hiddenCards.removeAll(stateActions1.get(stateActions1.size()-1).action);
+                    player0.state.enemyAttack=stateActions1.get(stateActions1.size()-1).action;
+                    player0.state.hiddenCards.remove(stateActions1.get(stateActions1.size()-1).action);
                     Card newCard=new Card(line.substring(2,4));
-                    defence0.add(newCard);
+                    defence0=newCard;
                     Game.cardsOnTable.add(newCard);
-                    stateActions0.add(new State.StateAction(new State(player0.state),new ArrayList<>(defence0),gameId));
-                    player0.state.hand.removeAll(defence0);
-                    defence0.clear();
+                    stateActions0.add(new State.StateAction(new State(player0.state),defence0,gameId));
+                    player0.state.hand.remove(defence0);
+                    defence0=null;
                 }
                 else if (prevLine.length()==4 && line.length()==4 && line.charAt(0)=='1' && attacker==0){
-                    player1.state.enemyAttack.clear();
-                    player1.state.enemyAttack.addAll(stateActions0.get(stateActions0.size()-1).action);
-                    player1.state.hiddenCards.removeAll(stateActions0.get(stateActions0.size()-1).action);
+                    player1.state.enemyAttack=stateActions0.get(stateActions0.size()-1).action;
+                    player1.state.hiddenCards.remove(stateActions0.get(stateActions0.size()-1).action);
                     Card newCard=new Card(line.substring(2,4));
-                    defence1.add(newCard);
+                    defence1=newCard;
                     Game.cardsOnTable.add(newCard);
-                    stateActions1.add(new State.StateAction(new State(player1.state),new ArrayList<>(defence1),gameId));
-                    player1.state.hand.removeAll(defence1);
-                    defence1.clear();
+                    stateActions1.add(new State.StateAction(new State(player1.state),defence1,gameId));
+                    player1.state.hand.remove(defence1);
+                    defence1=null;
 
                 }
                 prevLine=line;

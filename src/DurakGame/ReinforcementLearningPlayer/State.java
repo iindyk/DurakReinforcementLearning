@@ -17,7 +17,7 @@ public class State {
     public HashSet<Card> hiddenCards=new HashSet<>();
 
     public ArrayList<Card> cardsOnTable=new ArrayList<>();
-    public ArrayList<Card> enemyAttack=new ArrayList<>();
+    public Card enemyAttack;
     public ActionType actionType;
     public int roundNumber;
 
@@ -31,7 +31,7 @@ public class State {
 
     public static class StateAction{
         State state;
-        public ArrayList<Card> action;
+        public Card action;
         State nextState; //todo think how to use it
         long gameID;
 
@@ -47,12 +47,12 @@ public class State {
                     "}\n";
         }
 
-        private StateAction(State state, ArrayList<Card> action) {
+        private StateAction(State state, Card action) {
             this.state = state;
             this.action = action;
         }
 
-        public StateAction(State state, ArrayList<Card> action, long gameID) {
+        public StateAction(State state, Card action, long gameID) {
             this.state = state;
             this.action = action;
             this.gameID=gameID;
@@ -66,12 +66,11 @@ public class State {
         enemyKnownCards=new ArrayList<>();
         hiddenCards=new HashSet<>();
         cardsOnTable=new ArrayList<>();
-        enemyAttack=new ArrayList<>();
     }
 
     public State(ArrayList<Card> hand, HashSet<Card> outOfTheGame, ArrayList<Card> enemyKnownCards, ActionType actionType,
-          ArrayList<Card> enemyAttack, ArrayList<Card> cardsOnTable, int roundNumber) throws EmptyEnemyAttackException, UndefinedActionException{
-        if (actionType==ActionType.DEFENCE && enemyAttack.size()==0) throw new EmptyEnemyAttackException();
+          Card enemyAttack, ArrayList<Card> cardsOnTable, int roundNumber) throws EmptyEnemyAttackException, UndefinedActionException{
+        if (actionType==ActionType.DEFENCE && enemyAttack==null) throw new EmptyEnemyAttackException();
         if (!(actionType==ActionType.DEFENCE||actionType==ActionType.ATTACK)) throw new UndefinedActionException();
         this.enemyAttack=enemyAttack;
         this.roundNumber=roundNumber;
@@ -84,7 +83,7 @@ public class State {
 
     State(State state){
         this.actionType=state.actionType;
-        this.enemyAttack=new ArrayList<>(state.enemyAttack);
+        this.enemyAttack=state.enemyAttack;
         this.roundNumber=state.roundNumber;
         this.cardsOnTable=new ArrayList<>(state.cardsOnTable);
         this.hiddenCards=new HashSet<>(state.hiddenCards);
@@ -149,4 +148,6 @@ public class State {
     static class EmptyEnemyAttackException extends Exception{}
 
     static class UndefinedActionException extends Exception {}
+
+    static class WrongEnemyAttackException extends Exception {}
 }

@@ -35,7 +35,7 @@ public class StateValueFunction {
         this.coefficients = coefficients;
     }
 
-    double getRvalue(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException, EmptyStateException {
+    double getRvalue(State currentState, Card action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException, EmptyStateException {
         RLPlayer.recursionDepth=0;
         logger.log(Level.FINEST,"----State is----"+currentState+"\n---action is---"+action+'\n');
         HashMap<State,Double> hm=RLPlayer.nextStates(currentState, action);
@@ -50,7 +50,7 @@ public class StateValueFunction {
         return result;
     }
 
-    public double getVvalue(ArrayList<State> stateSequence, ArrayList<ArrayList<Card>> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException, EmptyStateException {
+    public double getVvalue(ArrayList<State> stateSequence, ArrayList<Card> actionSequence) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, RLPlayer.IncorrectActionException, Card.UnknownSuitException, UndefinedFeatureException, EmptyStateException {
         double result = 0;
         for (int i = 0; i < actionSequence.size(); i++)
             result += getRvalue(stateSequence.get(i), actionSequence.get(i)) * Math.pow(DISCOUNT_FACTOR, i);
@@ -79,19 +79,19 @@ public class StateValueFunction {
         return r;
     }
 
-    public static double getSimpleRvalue(State state,ArrayList<Card> action) throws RLPlayer.IncorrectActionException, State.EmptyEnemyAttackException, UndefinedFeatureException {
+    public static double getSimpleRvalue(State state,Card action) throws RLPlayer.IncorrectActionException, State.EmptyEnemyAttackException, UndefinedFeatureException {
         if (state==null||action==null) return 0;
-        if (!state.hand.containsAll(action)) {
+        if (!state.hand.contains(action)) {
             logger.log(Level.WARNING,"problem is "+state+"action is"+action);
             throw new RLPlayer.IncorrectActionException();
         }
-        if (state.actionType== State.ActionType.DEFENCE && state.enemyAttack.isEmpty()) {
+        if (state.actionType== State.ActionType.DEFENCE && state.enemyAttack==null) {
             logger.log(Level.WARNING,"problem is "+state+"action is"+action);
             throw new State.EmptyEnemyAttackException();
         }
 
         State nextState=new State(state);
-        nextState.hand.removeAll(action);
+        nextState.hand.remove(action);
         nextState.cardsOnTable.clear();
 
         int sumVal =0;

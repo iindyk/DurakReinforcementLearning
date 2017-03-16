@@ -43,13 +43,14 @@ public class RLPlayer extends Player {
     }
 
     @Override
-    public ArrayList<Card> attack() throws Card.TrumpIsNotDefinedException {
-        ArrayList<ArrayList<Card>> possibleActions=possibleActions(this.state);
+    public Card attack() throws Card.TrumpIsNotDefinedException {
+        while (this.state.hand.remove(null)){}
+        ArrayList<Card> possibleActions=possibleActions(this.state);
         logger.log(Level.FINEST,"Possible actions are "+possibleActions);
-        ArrayList<Card> attack=possibleActions.get(0);
+        Card attack=possibleActions.get(0);
         try {
             double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,attack);
-            for (ArrayList<Card> possibleAttack:
+            for (Card possibleAttack:
                  possibleActions) {
                 double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleAttack);
                 if (maxReward<possibleReward){
@@ -61,17 +62,18 @@ public class RLPlayer extends Player {
         catch (Exception e) {
             e.printStackTrace();
         }
-        this.state.hand.removeAll(attack);
+        this.state.hand.remove(attack);
         return attack;
     }
 
     @Override
-    public ArrayList<Card> defend(ArrayList<Card> attackCards) throws Card.TrumpIsNotDefinedException {
-        ArrayList<ArrayList<Card>> possibleActions=possibleActions(this.state);
-        ArrayList<Card> defence=possibleActions.get(0);
+    public Card defend(Card attackCard) throws Card.TrumpIsNotDefinedException {
+        while (this.state.hand.remove(null)){}
+        ArrayList<Card> possibleActions=possibleActions(this.state);
+        Card defence=possibleActions.get(0);
         try {
             double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,defence);
-            for (ArrayList<Card> possibleDefence:
+            for (Card possibleDefence:
                     possibleActions) {
                 double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleDefence);
                 if (maxReward<possibleReward){
@@ -83,7 +85,7 @@ public class RLPlayer extends Player {
         catch (Exception e) {
             e.printStackTrace();
         }
-        this.state.hand.removeAll(defence);
+        this.state.hand.remove(defence);
         return defence;
     }
 
@@ -92,14 +94,14 @@ public class RLPlayer extends Player {
         return 0;
     }
 
-    public static HashMap<State,Double> nextStates(State currentState, ArrayList<Card> action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException, StateValueFunction.UndefinedFeatureException {
+    public static HashMap<State,Double> nextStates(State currentState, Card action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException, StateValueFunction.UndefinedFeatureException {
         recursionDepth++;
         if (recursionDepth>100) {
             logger.log(Level.WARNING, "Recursion depth is to high!!! State is "+currentState+"\n action is "+action);
             return new HashMap<>();
         }
-        if (currentState==null||action==null) return new HashMap<>();
-        if (!currentState.hand.containsAll(action)) {
+        if (currentState==null) return new HashMap<>();
+        if (!currentState.hand.contains(action) && action!=null) {
             /*for (State.StateAction sa:
                  historyStateActions) {
                 if (sa.state.equals(currentState)) System.out.println(sa.gameID);
@@ -107,7 +109,7 @@ public class RLPlayer extends Player {
             logger.log(Level.WARNING,"problem is "+currentState+"action is"+action);
             throw new IncorrectActionException();
         }
-        if (currentState.actionType== State.ActionType.DEFENCE && currentState.enemyAttack.isEmpty()) {
+        if (currentState.actionType== State.ActionType.DEFENCE && currentState.enemyAttack==null) {
             /*for (State.StateAction sa:
                     historyStateActions) {
                 if (sa.state.equals(currentState)) System.out.println(sa.gameID);
@@ -118,8 +120,8 @@ public class RLPlayer extends Player {
 
 
         State nextState=new State(currentState);
-        nextState.hand.removeAll(action);
-        if (!nextState.cardsOnTable.containsAll(action)) nextState.cardsOnTable.addAll(action);
+        nextState.hand.remove(action);
+        if (!nextState.cardsOnTable.contains(action)) nextState.cardsOnTable.add(action);
 
         int sumVal =0;
         for (Card card: currentState.hiddenCards) sumVal +=card.valueIntWithTrump;
@@ -130,15 +132,15 @@ public class RLPlayer extends Player {
         HashMap<State,Double> r=new HashMap<>();
         if (currentState.actionType== State.ActionType.ATTACK){
             if (currentState.enemyKnownCards.isEmpty()){
-                for (ArrayList<Card> additionalAttack:
+                for (Card additionalAttack:
                      Player.possibleAttacks(nextState.hand,nextState.cardsOnTable)) {
                     State nextState1=new State(nextState);
-                    nextState1.enemyKnownCards.addAll(action);
-                    nextState1.enemyKnownCards.addAll(additionalAttack);
+                    nextState1.enemyKnownCards.add(action);
+                    nextState1.enemyKnownCards.add(additionalAttack);
                     nextState1.cardsOnTable.clear();
                     r.put(nextState1,1d);
                     State nextState2=new State(nextState);
-                    for (int i = 0; i <action.size()+additionalAttack.size() ; i++) {
+                    for (int i = 0; i < (action==null? 0:1)+(additionalAttack==null? 0:1) ; i++) {
                         nextState2.cardsOnTable.add(new Card(24));
                     }
                     nextState2.outOfTheGame.addAll(nextState2.cardsOnTable);
@@ -147,14 +149,13 @@ public class RLPlayer extends Player {
                     r.put(nextState2,1d);
                 }
             }
-            else if ((action.size()!=0 && (Player.canDefend(nextState.enemyKnownCards,action) || nextState.hiddenCards.size()>0))){
-                ArrayList<ArrayList<Card>> possibleDefences=possibleDefences(nextState.enemyKnownCards,action);
-                ArrayList<Card> hiddenDefence=new ArrayList<>();
-                for (Card card: action) hiddenDefence.add(new Card(24));
+            else if ((action!=null && (Player.canDefend(nextState.enemyKnownCards,action) || nextState.hiddenCards.size()>0))){
+                ArrayList<Card> possibleDefences=possibleDefences(nextState.enemyKnownCards,action);
+                Card hiddenDefence=new Card(24);
                 possibleDefences.add(hiddenDefence);
-                for (ArrayList<Card> possibleDefence :
+                for (Card possibleDefence :
                         possibleDefences) {
-                    if (possibleDefence.isEmpty()){
+                    if (possibleDefence==null){
                         nextState.enemyKnownCards.addAll(nextState.cardsOnTable);
                         nextState.cardsOnTable.clear();
                         State nextState1=new State(nextState);
@@ -163,21 +164,21 @@ public class RLPlayer extends Player {
                         continue;
                     }
                     nextState.cardsOnTable=new ArrayList<>(currentState.cardsOnTable);
-                    nextState.cardsOnTable.addAll(action);
-                    nextState.cardsOnTable.addAll(possibleDefence);
+                    nextState.cardsOnTable.add(action);
+                    nextState.cardsOnTable.add(possibleDefence);
                     nextState.enemyKnownCards=new ArrayList<>(currentState.enemyKnownCards);
-                    nextState.enemyKnownCards.removeAll(possibleDefence);
+                    nextState.enemyKnownCards.remove(possibleDefence);
                     //
-                    ArrayList<ArrayList<Card>> possibleAdditionalAttacks=possibleAttacks(nextState.hand,nextState.cardsOnTable);
+                    ArrayList<Card> possibleAdditionalAttacks=possibleAttacks(nextState.hand,nextState.cardsOnTable);
                     double min=1000;
                     double max=-1000;
-                    for (ArrayList<Card> possibleAdditionalAttack:
+                    for (Card possibleAdditionalAttack:
                          possibleAdditionalAttacks) {
                         double rv=StateValueFunction.getSimpleRvalue(nextState,possibleAdditionalAttack);
                         if (rv>max) max=rv;
                         if (rv<min) min=rv;
                     }
-                    for (ArrayList<Card> possibleAdditionalAttack:
+                    for (Card possibleAdditionalAttack:
                             possibleAdditionalAttacks) {
                         if (StateValueFunction.getSimpleRvalue(nextState,possibleAdditionalAttack)>=(max+min)/2) r.putAll(nextStates(nextState,possibleAdditionalAttack));
                     }
@@ -186,7 +187,7 @@ public class RLPlayer extends Player {
             }
             else {
                 //recursion base case
-                if (action.size()!=0) {
+                if (action!=null) {
                     nextState.actionType= State.ActionType.ATTACK;
                     nextState.enemyKnownCards.addAll(nextState.cardsOnTable);
                     nextState.cardsOnTable.clear();
@@ -195,7 +196,7 @@ public class RLPlayer extends Player {
                     nextState.actionType= State.ActionType.DEFENCE;
                     nextState.outOfTheGame.addAll(nextState.cardsOnTable);
                     nextState.cardsOnTable.clear();
-                    nextState.enemyAttack.add(avgHiddenCard);
+                    nextState.enemyAttack=avgHiddenCard;
                 }
                 nextState.roundNumber++;
                 r.put(new State(nextState),1d);
@@ -204,14 +205,13 @@ public class RLPlayer extends Player {
         }
         ///////////////////////////////
         else {
-            if (action.size() == 0) {
+            if (action == null) {
                 //recursion base case
                 while(nextState.hand.remove(avgHiddenCard)) { }
                 nextState.hand.addAll(nextState.cardsOnTable);
                 nextState.hiddenCards.removeAll(nextState.cardsOnTable);
                 nextState.cardsOnTable.clear();
-                nextState.enemyAttack.clear();
-                nextState.enemyAttack.add(avgHiddenCard);
+                nextState.enemyAttack=avgHiddenCard;
                 nextState.roundNumber++;
                 r.put(new State(nextState), 1d);
                 return r;
@@ -219,20 +219,20 @@ public class RLPlayer extends Player {
             else if(nextState.enemyKnownCards.isEmpty()){
                 nextState.outOfTheGame.addAll(nextState.cardsOnTable);
                 nextState.cardsOnTable.clear();
-                nextState.enemyAttack.clear();
+                nextState.enemyAttack=null;
                 nextState.roundNumber++;
             }
             else {
-                for (ArrayList<Card> possibleAdditionalAttack :
+                for (Card possibleAdditionalAttack :
                         Player.possibleAttacks(nextState.enemyKnownCards, nextState.cardsOnTable)) {
                     nextState.cardsOnTable = new ArrayList<>(currentState.cardsOnTable);
-                    nextState.cardsOnTable.addAll(action);
-                    nextState.cardsOnTable.addAll(possibleAdditionalAttack);
+                    nextState.cardsOnTable.add(action);
+                    nextState.cardsOnTable.add(possibleAdditionalAttack);
                     nextState.enemyKnownCards=new ArrayList<>(currentState.enemyKnownCards);
-                    nextState.enemyKnownCards.removeAll(possibleAdditionalAttack);
-                    if (possibleAdditionalAttack.size()==0){
+                    nextState.enemyKnownCards.remove(possibleAdditionalAttack);
+                    if (possibleAdditionalAttack==null){
                         State nextState1=new State(nextState);
-                        for (int j = 0; j < action.size() && Game.deck.size() <= j; j++) nextState1.hand.add(avgHiddenCard);
+                        if (Game.deck.size() >0) nextState1.hand.add(avgHiddenCard);
                         nextState1.outOfTheGame.addAll(nextState1.cardsOnTable);
                         nextState1.hand.removeAll(nextState1.cardsOnTable);
                         nextState1.enemyKnownCards.removeAll(nextState1.cardsOnTable);
@@ -243,16 +243,16 @@ public class RLPlayer extends Player {
                         continue;
                     }
                     //
-                    ArrayList<ArrayList<Card>> possibleAdditionalDefences=possibleDefences(nextState.hand,possibleAdditionalAttack);
+                    ArrayList<Card> possibleAdditionalDefences=possibleDefences(nextState.hand,possibleAdditionalAttack);
                     double min=1000;
                     double max=-1000;
-                    for (ArrayList<Card> possibleAdditionalDefence:
+                    for (Card possibleAdditionalDefence:
                             possibleAdditionalDefences) {
                         double rv=StateValueFunction.getSimpleRvalue(nextState,possibleAdditionalDefence);
                         if (rv>max) max=rv;
                         if (rv<min) min=rv;
                     }
-                    for (ArrayList<Card> possibleAdditionalDefence :
+                    for (Card possibleAdditionalDefence :
                             possibleAdditionalDefences) {
                         if (StateValueFunction.getSimpleRvalue(nextState,possibleAdditionalDefence)>=(max+min)/2) r.putAll(nextStates(nextState, possibleAdditionalDefence));
                     }
@@ -265,7 +265,7 @@ public class RLPlayer extends Player {
         return r;
     }
 
-    public void addToHistory(State state,ArrayList<Card> action, float reward){//reward?
+    public void addToHistory(State state,Card action, float reward){//reward?
         historyStateActions.add(new State.StateAction(state,action,0));
     }
 
@@ -291,13 +291,13 @@ public class RLPlayer extends Player {
             //LP
             double[] accumulatedCoef=new double[StateValueFunction.FEATURES_NUMBER];
             for (State.StateAction stateAction: stateActions) {
-                stateAction.state.cardsOnTable.removeAll(stateAction.action);//
+                stateAction.state.cardsOnTable.remove(stateAction.action);//
                 double[] lpCoef=new double[StateValueFunction.FEATURES_NUMBER];
                 State nextState=StateValueFunction.getStateWithMaxReward(nextStates(stateAction.state,stateAction.action));
-                ArrayList<ArrayList<Card>> possibleActions=possibleActions(stateAction.state);
-                for (ArrayList<Card> possibleAction:
+                ArrayList<Card> possibleActions=possibleActions(stateAction.state);
+                for (Card possibleAction:
                      possibleActions) {
-                    if (!(stateAction.action.containsAll(possibleAction)&&possibleAction.containsAll(stateAction.action))){
+                    if (!stateAction.action.equals(possibleAction)){
                         State nextPossibleState=StateValueFunction.getStateWithMaxReward(nextStates(stateAction.state,possibleAction));
                         for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++) {
                             lpCoef[j]+=(StateValueFunction.getBasisFunctionValue(j,nextPossibleState)-StateValueFunction.getBasisFunctionValue(j,nextState));

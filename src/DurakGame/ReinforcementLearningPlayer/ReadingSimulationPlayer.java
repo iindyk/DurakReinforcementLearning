@@ -18,12 +18,12 @@ public class ReadingSimulationPlayer extends Player {
     }
 
     @Override
-    public ArrayList<Card> attack() {
+    public Card attack() {
         return null;
     }
 
     @Override
-    public ArrayList<Card> defend(ArrayList<Card> attackCards) {
+    public Card defend(Card attackCard) {
         return null;
     }
 
@@ -33,7 +33,7 @@ public class ReadingSimulationPlayer extends Player {
     }
 
     @Override
-    public boolean canDefend(ArrayList<Card> attack) {
+    public boolean canDefend(Card attack) {
         return false;
     }
 
