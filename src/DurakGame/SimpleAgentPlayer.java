@@ -25,8 +25,9 @@ public class SimpleAgentPlayer extends Player {
         int minv=1000;
         for (Card possibleAttack:
                 possibleAttacks) {
-            if (possibleAttack.valueIntWithTrump<minv){
-                minv=possibleAttack.valueIntWithTrump;
+            int v=(possibleAttack==null? 0:possibleAttack.valueIntWithTrump);
+            if (v<minv){
+                minv=v;
                 result=possibleAttack;
             }
         }

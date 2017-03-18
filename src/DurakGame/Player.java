@@ -301,6 +301,8 @@ public abstract class Player {
     }
 
     public static ArrayList<Card> possibleAttacks(ArrayList<Card> hand, ArrayList<Card> cardsOnTable) throws Card.TrumpIsNotDefinedException {
+        while (hand.remove(null)){}
+        while (cardsOnTable.remove(null)){}
         ArrayList<Card> possibleActions=new ArrayList<>();
         ArrayList<Card> chand=new ArrayList<>(hand);
         for (Card hc: hand) if (hc.suit=='\0' ||hc.suit=='j'||hc.valueIntWithTrump==24) chand.remove(hc);

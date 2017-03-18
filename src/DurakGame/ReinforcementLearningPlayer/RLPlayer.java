@@ -221,6 +221,10 @@ public class RLPlayer extends Player {
                 nextState.cardsOnTable.clear();
                 nextState.enemyAttack=null;
                 nextState.roundNumber++;
+                nextState.actionType= State.ActionType.ATTACK;
+                //
+                r.put(new State(nextState),1d);
+                return r;
             }
             else {
                 for (Card possibleAdditionalAttack :

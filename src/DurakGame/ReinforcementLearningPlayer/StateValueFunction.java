@@ -58,6 +58,7 @@ public class StateValueFunction {
     }
 
     static double getBasisFunctionValue(int i, State state) throws UndefinedFeatureException {
+        while (state.hand.remove(null)){}
         if (i == 0) {
             int sum = 0;
             for (Card card :
