@@ -19,7 +19,7 @@ public class StateValueFunction {
     private static final double DISCOUNT_FACTOR = 0.5;
     public static final double LEARNING_FACTOR = 0.1;
     public static final double RANDOM_FACTOR = 0.1;
-    static final int FEATURES_NUMBER = 2;
+    static final int FEATURES_NUMBER = 3;
     double[] coefficients = new double[FEATURES_NUMBER];
 
     private StateValueFunction() {}
@@ -59,6 +59,7 @@ public class StateValueFunction {
 
     static double getBasisFunctionValue(int i, State state) throws UndefinedFeatureException {
         while (state.hand.remove(null)){}
+        while (state.enemyKnownCards.remove(null)){}
         if (i == 0) {
             int sum = 0;
             for (Card card :
@@ -68,7 +69,27 @@ public class StateValueFunction {
             if (sum==0) return 1;
             else return ( ((double)sum / state.hand.size())-6) / 17;//normalization
         } else if (i == 1) return -(double) state.hand.size() / 6;//normalization
-            //else if (i==2) {                }
+        else if (i==2) {
+            double hiddenCardValue=0;
+            double r=0;
+            int enemyCardsQty=0;
+            for (Card hc:
+                 state.hiddenCards) {
+                hiddenCardValue+=hc.valueIntWithTrump;
+            }
+            if (!state.hiddenCards.isEmpty()) hiddenCardValue/=state.hiddenCards.size();
+            for (Card ec:
+                 state.enemyKnownCards) {
+                r+=ec.valueIntWithTrump;
+                enemyCardsQty++;
+            }
+            while (enemyCardsQty<6 && Game.deck.size()>0) {
+                r+=hiddenCardValue;
+                enemyCardsQty++;
+            }
+            r/=enemyCardsQty;
+            return r;
+        }
         else throw new UndefinedFeatureException();
     }
 
