@@ -301,7 +301,7 @@ public class RLPlayer extends Player {
                 ArrayList<Card> possibleActions=possibleActions(stateAction.state);
                 for (Card possibleAction:
                      possibleActions) {
-                    if (!stateAction.action.equals(possibleAction)){
+                    if ( stateAction.action!=null &&!stateAction.action.equals(possibleAction)){
                         State nextPossibleState=StateValueFunction.getStateWithMaxReward(nextStates(stateAction.state,possibleAction));
                         for (int j = 0; j <StateValueFunction.FEATURES_NUMBER ; j++) {
                             lpCoef[j]+=(StateValueFunction.getBasisFunctionValue(j,nextPossibleState)-StateValueFunction.getBasisFunctionValue(j,nextState));

@@ -87,9 +87,8 @@ public class StateValueFunction {
                 r+=hiddenCardValue;
                 enemyCardsQty++;
             }
-            System.out.println(state.enemyKnownCards);
             r/=enemyCardsQty;
-            return r;
+            return (6-r)/17;
         }
         else throw new UndefinedFeatureException();
     }
