@@ -30,7 +30,7 @@ public class State {
     }
 
     public static class StateAction{
-        State state;
+        public State state;
         public Card action;
         State nextState; //todo think how to use it
         long gameID;

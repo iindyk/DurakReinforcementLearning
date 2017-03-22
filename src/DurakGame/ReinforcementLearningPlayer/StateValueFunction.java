@@ -83,10 +83,11 @@ public class StateValueFunction {
                 r+=ec.valueIntWithTrump;
                 enemyCardsQty++;
             }
-            while (enemyCardsQty<6 && Game.deck.size()>0) {
+            while (enemyCardsQty<6 && state.hiddenCards.size()>0) {
                 r+=hiddenCardValue;
                 enemyCardsQty++;
             }
+            System.out.println(state.enemyKnownCards);
             r/=enemyCardsQty;
             return r;
         }

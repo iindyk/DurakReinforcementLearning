@@ -334,10 +334,10 @@ public class RLPlayer extends Player {
     public void writeValueFunctionsToDB(ArrayList<StateValueFunction> valueFunctions) throws SQLException, ClassNotFoundException {
         new Conn("RLPlayerDB.db");
         statmt = conn.createStatement();
-        String sql="INSERT INTO 'valueFunctions' ('id','coef0','coef1') VALUES ('";
+        String sql="INSERT INTO 'valueFunctions' ('id','coef0','coef1','coef2') VALUES ('";
         for (int i = 0; i <valueFunctions.size() ; i++) {
             statmt.execute(sql+i+"','"+valueFunctions.get(i).coefficients[0]+"','"+
-            valueFunctions.get(i).coefficients[1]+"')");
+            valueFunctions.get(i).coefficients[1]+"','"+ valueFunctions.get(i).coefficients[2]+"')");
         }
         conn.close();
         statmt.close();
@@ -352,7 +352,8 @@ public class RLPlayer extends Player {
             int id = resSet.getInt("id");
             double coef0 = resSet.getDouble("coef0");
             double coef1 = resSet.getDouble("coef1");
-            double[] coef=new double[]{coef0,coef1};
+            double coef2 = resSet.getDouble("coef2");
+            double[] coef=new double[]{coef0,coef1,coef2};
             this.valueFunctions.add(new StateValueFunction(coef));
         }
         resSet.close();

@@ -80,25 +80,25 @@ public class Main {
             Player[] players=new Player[]{player0,player1};
 
             //write
-/*
+
             RLFileReader reader=new RLFileReader();
             player0.addToHistory(reader.readStateActionsFromTxd("D:\\coding\\java\\DurakReinforcementLearning\\games.txd"));
             for (State.StateAction sa:
-                    RLPlayer.historyStateActions) {
-                if (sa.action.size()>1) System.out.println(sa);
+                 RLPlayer.historyStateActions) {
+                if (sa.state.actionType== State.ActionType.UNDEFINED) System.out.println(sa);
             }
             player0.adjustValueFunctionsWithHistory();
             player0.writeValueFunctionsToDB(player0.valueFunctions);
-*/
-            //read
 
+            //read
+/*
             player0.readValueFunctionsFromDB();
             Game.setWinnersTable(players);
             for (int i = 0; i <100 ; i++) {
                 new Game(players);
             }
             logger.log(Level.WARNING,Game.getWinnersTable());
-
+*/
         }
         catch (Throwable e){
             logger.log(Level.WARNING,"Exception occurred "+e);
