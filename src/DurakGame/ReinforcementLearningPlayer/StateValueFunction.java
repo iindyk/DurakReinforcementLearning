@@ -19,7 +19,7 @@ public class StateValueFunction {
     private static final double DISCOUNT_FACTOR = 0.5;
     public static final double LEARNING_FACTOR = 0.1;
     public static final double RANDOM_FACTOR = 0.1;
-    static final int FEATURES_NUMBER = 3;
+    static final int FEATURES_NUMBER = 2;
     double[] coefficients = new double[FEATURES_NUMBER];
 
     private StateValueFunction() {}

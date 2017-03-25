@@ -94,7 +94,7 @@ public class Main {
 
             player0.readValueFunctionsFromDB();
             Game.setWinnersTable(players);
-            for (int i = 0; i <100 ; i++) {
+            for (int i = 0; i <1 ; i++) {
                 new Game(players);
             }
             logger.log(Level.WARNING,Game.getWinnersTable());

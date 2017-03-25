@@ -70,6 +70,7 @@ public class RLPlayer extends Player {
     public Card defend(Card attackCard) throws Card.TrumpIsNotDefinedException {
         while (this.state.hand.remove(null)){}
         ArrayList<Card> possibleActions=possibleActions(this.state);
+        logger.log(Level.FINEST,"Possible actions are "+possibleActions);
         Card defence=possibleActions.get(0);
         try {
             double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,defence);
