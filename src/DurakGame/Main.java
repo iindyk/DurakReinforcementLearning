@@ -1,19 +1,14 @@
 package DurakGame;
 
-import DurakGame.ReinforcementLearningPlayer.*;
+import DurakGame.ReinforcementLearningPlayer.RLPlayer;
+import DurakGame.ReinforcementLearningPlayer.SingleLineFormatter;
+import DurakGame.ReinforcementLearningPlayer.State;
 
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.logging.Formatter;
-import java.util.HashMap;
 import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.SimpleFormatter;
 
-import static DurakGame.Game.getWinnersTable;
 import static DurakGame.Game.logger;
 
 
@@ -78,6 +73,19 @@ public class Main {
             RLPlayer player0=new RLPlayer();
             Player player1=new SimpleAgentPlayer();
             Player[] players=new Player[]{player0,player1};
+            Game.deck = Card.createDeck();
+            player0.takeCardFromDeck(new Card('7', 'c'));
+            player0.takeCardFromDeck(new Card('t', 'c'));
+            player0.takeCardFromDeck(new Card('k', 'c'));
+            player0.takeCardFromDeck(new Card('6', 'h'));
+            player0.takeCardFromDeck(new Card('7', 'h'));
+            player0.takeCardFromDeck(new Card('k', 's'));
+            player0.state.actionType = State.ActionType.ATTACK;
+            for (Card possibleAction :
+                    Player.possibleActions(player0.state)) {
+                System.out.println("-----action is----" + possibleAction);
+                System.out.println(RLPlayer.nextStates(player0.state, possibleAction));
+            }
 
             //write
 /*
@@ -91,14 +99,14 @@ public class Main {
             player0.writeValueFunctionsToDB(player0.valueFunctions);
 */
             //read
-
+/*
             player0.readValueFunctionsFromDB();
             Game.setWinnersTable(players);
             for (int i = 0; i <1 ; i++) {
                 new Game(players);
             }
             logger.log(Level.WARNING,Game.getWinnersTable());
-
+*/
         }
         catch (Throwable e){
             logger.log(Level.WARNING,"Exception occurred "+e);

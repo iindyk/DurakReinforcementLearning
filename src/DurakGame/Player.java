@@ -335,6 +335,13 @@ public abstract class Player {
         logger.log(Level.INFO,this.name+" takes ["+card+"] from deck");
     }
 
+    public void takeCardFromDeck(Card card) {
+        Game.deck.remove(card);
+        this.state.hand.add(card);
+        this.state.hiddenCards.remove(card);
+        logger.log(Level.INFO, this.name + " takes [" + card + "] from deck");
+    }
+
     private void takeCard(Card card){
         this.state.hand.add(card);
     }
