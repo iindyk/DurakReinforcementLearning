@@ -10,27 +10,23 @@ import scpsolver.lpsolver.LinearProgramSolver;
 import scpsolver.lpsolver.SolverFactory;
 import scpsolver.problems.LinearProgram;
 
-import java.sql.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-import static DurakGame.Conn.conn;
-import static DurakGame.Conn.resSet;
-import static DurakGame.Conn.statmt;
+import static DurakGame.Conn.*;
 import static DurakGame.Game.logger;
 
 /**
- * Created by HP on 04.02.2017.
+ * Created by Ihor Indyk on 04.02.2017.
  */
 public class RLPlayer extends Player {
-    private static int count;
     public static ArrayList<State.StateAction> historyStateActions=new ArrayList<>();
-    public ArrayList<StateValueFunction> valueFunctions=new ArrayList<>(State.NUMBER_OF_CLUSTERS);
     public static int recursionDepth=0;
+    private static int count;
+    public ArrayList<StateValueFunction> valueFunctions = new ArrayList<>(State.NUMBER_OF_CLUSTERS);
 
     public RLPlayer(){
         for (int i = 0; i <State.NUMBER_OF_CLUSTERS ; i++) {
@@ -42,61 +38,7 @@ public class RLPlayer extends Player {
         count++;
     }
 
-    @Override
-    public Card attack() throws Card.TrumpIsNotDefinedException {
-        while (this.state.hand.remove(null)){}
-        ArrayList<Card> possibleActions=possibleActions(this.state);
-        logger.log(Level.FINEST,"Possible actions are "+possibleActions);
-        Card attack=possibleActions.get(0);
-        try {
-            double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,attack);
-            for (Card possibleAttack:
-                 possibleActions) {
-                double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleAttack);
-                if (maxReward<possibleReward){
-                    maxReward=possibleReward;
-                    attack=possibleAttack;
-                }
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        this.state.hand.remove(attack);
-        return attack;
-    }
-
-    @Override
-    public Card defend(Card attackCard) throws Card.TrumpIsNotDefinedException {
-        while (this.state.hand.remove(null)){}
-        ArrayList<Card> possibleActions=possibleActions(this.state);
-        logger.log(Level.FINEST,"Possible actions are "+possibleActions);
-        Card defence=possibleActions.get(0);
-        try {
-            double maxReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,defence);
-            for (Card possibleDefence:
-                    possibleActions) {
-                double possibleReward=this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state,possibleDefence);
-                if (maxReward<possibleReward){
-                    maxReward=possibleReward;
-                    defence=possibleDefence;
-                }
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        this.state.hand.remove(defence);
-        return defence;
-    }
-
-    @Override
-    public int getCardValue(Card card) {
-        return 0;
-    }
-
     public static HashMap<State,Double> nextStates(State currentState, Card action) throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException, StateValueFunction.UndefinedFeatureException {
-        recursionDepth++;
         if (recursionDepth>100) {
             logger.log(Level.WARNING, "Recursion depth is to high!!! State is "+currentState+"\n action is "+action);
             return new HashMap<>();
@@ -146,7 +88,8 @@ public class RLPlayer extends Player {
                     }
                     nextState2.outOfTheGame.addAll(nextState2.cardsOnTable);
                     nextState2.cardsOnTable.clear();
-                    nextState2.actionType= State.ActionType.DEFENCE;
+                    //todo this should not be end of recursion
+                    //nextState2.actionType= State.ActionType.DEFENCE;
                     r.put(nextState2,1d);
                 }
             }
@@ -270,6 +213,59 @@ public class RLPlayer extends Player {
         return r;
     }
 
+    @Override
+    public Card attack() throws Card.TrumpIsNotDefinedException {
+        while (this.state.hand.remove(null)) {
+        }
+        ArrayList<Card> possibleActions = possibleActions(this.state);
+        logger.log(Level.FINEST, "Possible actions are " + possibleActions);
+        Card attack = possibleActions.get(0);
+        try {
+            double maxReward = this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state, attack);
+            for (Card possibleAttack :
+                    possibleActions) {
+                double possibleReward = this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state, possibleAttack);
+                if (maxReward < possibleReward) {
+                    maxReward = possibleReward;
+                    attack = possibleAttack;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        this.state.hand.remove(attack);
+        return attack;
+    }
+
+    @Override
+    public Card defend(Card attackCard) throws Card.TrumpIsNotDefinedException {
+        while (this.state.hand.remove(null)) {
+        }
+        ArrayList<Card> possibleActions = possibleActions(this.state);
+        logger.log(Level.FINEST, "Possible actions are " + possibleActions);
+        Card defence = possibleActions.get(0);
+        try {
+            double maxReward = this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state, defence);
+            for (Card possibleDefence :
+                    possibleActions) {
+                double possibleReward = this.valueFunctions.get(this.state.roundNumber).getRvalue(this.state, possibleDefence);
+                if (maxReward < possibleReward) {
+                    maxReward = possibleReward;
+                    defence = possibleDefence;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        this.state.hand.remove(defence);
+        return defence;
+    }
+
+    @Override
+    public int getCardValue(Card card) {
+        return 0;
+    }
+
     public void addToHistory(State state,Card action, float reward){//reward?
         historyStateActions.add(new State.StateAction(state,action,0));
     }
@@ -279,7 +275,7 @@ public class RLPlayer extends Player {
     }
 
     public void addToHistory(ArrayList<State.StateAction> stateActions){
-        this.historyStateActions.addAll(stateActions);
+        historyStateActions.addAll(stateActions);
     }
 
     public void adjustValueFunctionsWithHistory() throws State.EmptyEnemyAttackException, State.UndefinedActionException, Card.TrumpIsNotDefinedException, IncorrectActionException, Card.UnknownSuitException, StateValueFunction.UndefinedFeatureException, StateValueFunction.EmptyStateException {
